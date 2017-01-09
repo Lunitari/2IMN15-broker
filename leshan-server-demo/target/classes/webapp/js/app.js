@@ -36,6 +36,7 @@ var leshanApp = angular.module('leshanApp',[
 
 leshanApp.run(function($rootScope) {
 	$rootScope.auth = false;
+	$rootScope.homedir = '#/auth/';
 });
 
 leshanApp.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
