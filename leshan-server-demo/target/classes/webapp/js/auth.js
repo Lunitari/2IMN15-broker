@@ -6,11 +6,11 @@ AuthController.controller('AuthCtrl', [
 	'$http',
 	'$location',
 	function AuthCtrl($rootScope, $scope, $http,$location) {
-   		
+
 		$scope.loginUser = function() {
-			
-			
-			$http.post('api/login/'+$scope.username, "password:"+$scope.password). error(function(data, status, headers, config){
+
+
+			$http.post('api/users/'+$scope.username, "login:"+$scope.password). error(function(data, status, headers, config){
 	            $scope.error = "Error: " + status + " " + data;
 	            console.error($scope.error);
 	        }).success(function(data, status, headers, config) {
@@ -19,8 +19,8 @@ AuthController.controller('AuthCtrl', [
     			{
         			$rootScope.auth = true;
     	   			$rootScope.user = "Peter";
-    	   			$location.path('/clients/');
-    	   			$rootScope.homedir = '#/clients/';
+    	   			$location.path('/lights/');
+    	   			$rootScope.homedir = '#/lights/';
     			}
         		else if (data === 'notAtDesk'){
     				$scope.error = "You are currently not at your desk.";
@@ -29,8 +29,8 @@ AuthController.controller('AuthCtrl', [
     				$scope.error = "Invalid username or password";
     	            //console.error($scope.error);
     			}
-	   			
+
 	        });
 		}
-   	}	   	
+   	}
 ]);

@@ -63,33 +63,23 @@ import com.google.gson.JsonSyntaxException;
 /**
  * Service HTTP REST API calls.
  */
-public class LoginServlet extends HttpServlet {
+public class UserServlet extends HttpServlet {
 
     private static final String FORMAT_PARAM = "format";
 
-    private static final Logger LOG = LoggerFactory.getLogger(LoginServlet.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UserServlet.class);
 
     private static final long TIMEOUT = 5000; // ms
 
     private static final long serialVersionUID = 1L;
 
     private final LwM2mServer server;
-
-    private final Gson gson;
     
     private User[] users;
 
-    public LoginServlet(LwM2mServer server, int securePort) {
+    public UserServlet(LwM2mServer server, int securePort) {
         this.server = server;
-
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.registerTypeHierarchyAdapter(Registration.class, new RegistrationSerializer(securePort));
-        gsonBuilder.registerTypeHierarchyAdapter(LwM2mResponse.class, new ResponseSerializer());
-        gsonBuilder.registerTypeHierarchyAdapter(LwM2mNode.class, new LwM2mNodeSerializer());
-        gsonBuilder.registerTypeHierarchyAdapter(LwM2mNode.class, new LwM2mNodeDeserializer());
-        gsonBuilder.setDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
-        this.gson = gsonBuilder.create();
-        
+      
         users = new User[2];
         users[0] = new User("Peter", 25, "Hoek, Peter","p.hoek@tue.nl","12345",true);
         users[1] = new User("Mark", 22, "Hoek, Mark","m.hoek@tue.nl","54321",false);
@@ -100,7 +90,9 @@ public class LoginServlet extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		
+    	// delete operations not allowed.
+	    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+	    resp.getWriter().append("Operation not allowed").flush();
     }
 
     /**
@@ -108,13 +100,13 @@ public class LoginServlet extends HttpServlet {
      */
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String[] path = StringUtils.split(req.getPathInfo(), '/');
-        String clientEndpoint = path[0];
+        
 
     }
 
     /**
-     * {@inheritDoc}
+     * TODO: remove the changing of the presence of the user -> acquire from the sensor/broker storage.
+     * Used for logging into the client side and changing the presence of the user.
      */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -123,9 +115,9 @@ public class LoginServlet extends HttpServlet {
         String data = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
         String[] input = StringUtils.split(data, ':');
         if (input.length >= 2){
-	        if (input[0].equals("password")){
+	        if (input[0].equals("login")){
 		        for(int i = 0; i < users.length; i++){
-		        	if(users[i].UserID.equals(userID)){
+		        	if(users[i].UserID.toLowerCase().equals(userID.toLowerCase())){
 		        		int correctLogin = users[i].checkLogin(input[1]);
 		        		if (correctLogin == 1){
 		                    resp.setContentType("text/plain");
@@ -166,91 +158,8 @@ public class LoginServlet extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String[] path = StringUtils.split(req.getPathInfo(), '/');
-        String clientEndpoint = path[0];
-
-        // /clients/endPoint/LWRequest/observe : cancel observation for the given resource.
-        if (path.length >= 4 && "observe".equals(path[path.length - 1])) {
-            try {
-                String target = StringUtils.substringsBetween(req.getPathInfo(), clientEndpoint, "/observe")[0];
-                Registration registration = server.getRegistrationService().getByEndpoint(clientEndpoint);
-                if (registration != null) {
-                    server.getObservationService().cancelObservations(registration, target);
-                    resp.setStatus(HttpServletResponse.SC_OK);
-                } else {
-                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    resp.getWriter().format("no registered client with id '%s'", clientEndpoint).flush();
-                }
-            } catch (IllegalArgumentException e) {
-                LOG.warn("Invalid request or response", e);
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                resp.getWriter().append(e.getMessage()).flush();
-            } catch (ResourceAccessException | RequestFailedException e) {
-                LOG.warn(String.format("Error accessing resource %s%s.", req.getServletPath(), req.getPathInfo()), e);
-                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                resp.getWriter().append(e.getMessage()).flush();
-            }
-            return;
-        }
-
-        // /clients/endPoint/LWRequest/ : delete instance
-        try {
-            String target = StringUtils.removeStart(req.getPathInfo(), "/" + clientEndpoint);
-            Registration registration = server.getRegistrationService().getByEndpoint(clientEndpoint);
-            if (registration != null) {
-                DeleteRequest request = new DeleteRequest(target);
-                DeleteResponse cResponse = server.send(registration, request, TIMEOUT);
-                processDeviceResponse(req, resp, cResponse);
-            } else {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                resp.getWriter().format("no registered client with id '%s'", clientEndpoint).flush();
-            }
-        } catch (IllegalArgumentException e) {
-            LOG.warn("Invalid request or response", e);
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().append(e.getMessage()).flush();
-        } catch (ResourceAccessException | RequestFailedException e) {
-            LOG.warn(String.format("Error accessing resource %s%s.", req.getServletPath(), req.getPathInfo()), e);
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().append(e.getMessage()).flush();
-        } catch (InterruptedException e) {
-            LOG.warn("Interrupted request", e);
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().append(e.getMessage()).flush();
-        }
-    }
-
-    private void processDeviceResponse(HttpServletRequest req, HttpServletResponse resp, LwM2mResponse cResponse)
-            throws IOException {
-        String response = null;
-        if (cResponse == null) {
-            LOG.warn(String.format("Request %s%s timed out.", req.getServletPath(), req.getPathInfo()));
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().append("Request timeout").flush();
-        } else {
-            response = this.gson.toJson(cResponse);
-            resp.setContentType("application/json");
-            resp.getOutputStream().write(response.getBytes());
-            resp.setStatus(HttpServletResponse.SC_OK);
-        }
-    }
-
-    private LwM2mNode extractLwM2mNode(String target, HttpServletRequest req) throws IOException {
-        String contentType = StringUtils.substringBefore(req.getContentType(), ";");
-        if ("application/json".equals(contentType)) {
-            String content = IOUtils.toString(req.getInputStream(), req.getCharacterEncoding());
-            LwM2mNode node;
-            try {
-                node = gson.fromJson(content, LwM2mNode.class);
-            } catch (JsonSyntaxException e) {
-                throw new IllegalArgumentException("unable to parse json to tlv:" + e.getMessage(), e);
-            }
-            return node;
-        } else if ("text/plain".equals(contentType)) {
-            String content = IOUtils.toString(req.getInputStream(), req.getCharacterEncoding());
-            int rscId = Integer.valueOf(target.substring(target.lastIndexOf("/") + 1));
-            return LwM2mSingleResource.newStringResource(rscId, content);
-        }
-        throw new IllegalArgumentException("content type " + req.getContentType() + " not supported");
+    	// delete operations not allowed.
+	    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+	    resp.getWriter().append("Operation not allowed").flush();
     }
 }

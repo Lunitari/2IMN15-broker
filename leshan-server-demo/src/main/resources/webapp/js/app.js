@@ -44,8 +44,8 @@ leshanApp.config(['$routeProvider', '$locationProvider', function($routeProvider
         when('/clients',           { templateUrl : 'partials/client-list.html',   controller : 'ClientListCtrl', publicAccess : false }).
         when('/clients/:clientId', { templateUrl : 'partials/client-detail.html', controller : 'ClientDetailCtrl', publicAccess : false }).
         when('/security',          { templateUrl : 'partials/security-list.html', controller : 'SecurityCtrl', publicAccess : false }).
-        when('/lights',           { templateUrl : 'partials/client-list.html',   controller : 'LightListCtrl', publicAccess : false }).
-        when('/lights/:clientId', { templateUrl : 'partials/client-detail.html', controller : 'LightDetailCtrl', publicAccess : false }).
+        when('/lights',           { templateUrl : 'partials/light-list.html',   controller : 'LightListCtrl', publicAccess : false }).
+        when('/lights/:clientId', { templateUrl : 'partials/light-detail.html', controller : 'LightDetailCtrl', publicAccess : false }).
         when('/login', 				{ templateUrl : 'partials/auth.html', controller : 'AuthCtrl', publicAccess : true }).
         otherwise({ redirectTo : '/login' });
 }]);

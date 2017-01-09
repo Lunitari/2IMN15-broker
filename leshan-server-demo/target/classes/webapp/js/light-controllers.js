@@ -1,15 +1,15 @@
 /*******************************************************************************
  * Copyright (c) 2013-2015 Sierra Wireless and others.
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v1.0 which accompany this distribution.
- * 
+ *
  * The Eclipse Public License is available at
  *    http://www.eclipse.org/legal/epl-v10.html
  * and the Eclipse Distribution License is available at
  *    http://www.eclipse.org/org/documents/edl-v10.html.
- * 
+ *
  * Contributors:
  *     Sierra Wireless - initial API and implementation
  *     Achim Kraus (Bosch Software Innovations GmbH) - fix typo in notificationCallback
@@ -35,10 +35,20 @@ lwLightControllers.controller('LightListCtrl', [
     '$http',
     '$location',
     function LightListCtrl($scope, $http,$location) {
+    	$scope.lights = [];
+        $scope.lightslist = true;
+    	// test lights
+        $scope.lights.push({lightId:"Light-Device-25-1", groupNo:25, locationX:1, locationY:1,roomId:"Room-1"})
+        $scope.lights.push({lightId:"Light-Device-25-2", groupNo:25, locationX:1, locationY:2,roomId:"Room-1"})
+        $scope.lights.push({lightId:"Light-Device-25-3", groupNo:25, locationX:2, locationY:1,roomId:"Room-1"})
+
+        $scope.lights.push({lightId:"Light-Device-24-1", groupNo:25, locationX:1, locationY:1,roomId:"Room-2"})
+        $scope.lights.push({lightId:"Light-Device-24-2", groupNo:25, locationX:1, locationY:2,roomId:"Room-2"})
+        $scope.lights.push({lightId:"Light-Device-24-3", groupNo:25, locationX:2, locationY:1,roomId:"Room-2"})
 
         // update navbar
         angular.element("#navbar").children().removeClass('active');
-        angular.element("#client-navlink").addClass('active');
+        angular.element("#light-navlink").addClass('active');
 
         // free resource when controller is destroyed
         $scope.$on('$destroy', function(){
@@ -48,82 +58,82 @@ lwLightControllers.controller('LightListCtrl', [
         });
 
         // add function to show client
-        $scope.showClient = function(client) {
-            $location.path('/lights/' + client.endpoint);
+        $scope.showClient = function(light) {
+            $location.path('/lights/' + light.lightId);
         };
 
         // the tooltip message to display for a client (all standard attributes, plus additional ones)
-        $scope.clientTooltip = function(client) {
-            var standard = ["Lifetime: " + client.lifetime + "s",
-                            "Binding mode: " + client.bindingMode,
-                            "Protocol version: " + client.lwM2mVersion,
-                            "Address: " + client.address];
-
-            var tooltip = standard.join("<br/>");
-            if (client.additionalRegistrationAttributes) {
-                var attributes = client.additionalRegistrationAttributes;
-                var additionals = [];
-                for (key in attributes) {
-                    var value = attributes[key];
-                    additionals.push(key + " : " + value);
-                }
-                if (additionals.length>0){
-                    tooltip = tooltip + "<hr/>" + additionals.join("<br/>");
-                }
-            }
-            return tooltip;
-        };
+        // $scope.clientTooltip = function(client) {
+        //     var standard = ["Lifetime: " + client.lifetime + "s",
+        //                     "Binding mode: " + client.bindingMode,
+        //                     "Protocol version: " + client.lwM2mVersion,
+        //                     "Address: " + client.address];
+        //
+        //     var tooltip = standard.join("<br/>");
+        //     if (client.additionalRegistrationAttributes) {
+        //         var attributes = client.additionalRegistrationAttributes;
+        //         var additionals = [];
+        //         for (key in attributes) {
+        //             var value = attributes[key];
+        //             additionals.push(key + " : " + value);
+        //         }
+        //         if (additionals.length>0){
+        //             tooltip = tooltip + "<hr/>" + additionals.join("<br/>");
+        //         }
+        //     }
+        //     return tooltip;
+        // };
 
         // get the list of connected clients
-        $http.get('api/clients'). error(function(data, status, headers, config){
-            $scope.error = "Unable get client list: " + status + " " + data;
-            console.error($scope.error);
-        }).success(function(data, status, headers, config) {
-            $scope.clients = data;
-
-            // HACK : we can not use ng-if="clients"
-            // because of https://github.com/angular/angular.js/issues/3969
-            $scope.clientslist = true;
-
-            // listen for clients registration/deregistration
-            $scope.eventsource = new EventSource('event');
-
-            var registerCallback = function(msg) {
-                $scope.$apply(function() {
-                    var client = JSON.parse(msg.data);
-                    $scope.clients.push(client);
-                });
-            };
-
-            var updateCallback =  function(msg) {
-                $scope.$apply(function() {
-                    var client = JSON.parse(msg.data);
-                    $scope.clients = updateClient(client, $scope.clients);
-                });
-            };
-            
-            $scope.eventsource.addEventListener('REGISTRATION', registerCallback, false);
-
-            $scope.eventsource.addEventListener('UPDATED', updateCallback, false);
-            
-            var getClientIdx = function(client) {
-                for (var i = 0; i < $scope.clients.length; i++) {
-                    if ($scope.clients[i].registrationId == client.registrationId) {
-                        return i;
-                    }
-                }
-                return -1;
-            };
-            var deregisterCallback = function(msg) {
-                $scope.$apply(function() {
-                    var clientIdx = getClientIdx(JSON.parse(msg.data));
-                    if(clientIdx >= 0) {
-                        $scope.clients.splice(clientIdx, 1);
-                    }
-                });
-            };
-            $scope.eventsource.addEventListener('DEREGISTRATION', deregisterCallback, false);
-        });
+        // $http.get('api/clients'). error(function(data, status, headers, config){
+        //     $scope.error = "Unable get client list: " + status + " " + data;
+        //     console.error($scope.error);
+        // }).success(function(data, status, headers, config) {
+        //     $scope.clients = data;
+        //
+        //     // HACK : we can not use ng-if="clients"
+        //     // because of https://github.com/angular/angular.js/issues/3969
+        //     $scope.clientslist = true;
+        //
+        //     // listen for clients registration/deregistration
+        //     $scope.eventsource = new EventSource('event');
+        //
+        //     var registerCallback = function(msg) {
+        //         $scope.$apply(function() {
+        //             var client = JSON.parse(msg.data);
+        //             $scope.clients.push(client);
+        //         });
+        //     };
+        //
+        //     var updateCallback =  function(msg) {
+        //         $scope.$apply(function() {
+        //             var client = JSON.parse(msg.data);
+        //             $scope.clients = updateClient(client, $scope.clients);
+        //         });
+        //     };
+        //
+        //     $scope.eventsource.addEventListener('REGISTRATION', registerCallback, false);
+        //
+        //     $scope.eventsource.addEventListener('UPDATED', updateCallback, false);
+        //
+        //     var getClientIdx = function(client) {
+        //         for (var i = 0; i < $scope.clients.length; i++) {
+        //             if ($scope.clients[i].registrationId == client.registrationId) {
+        //                 return i;
+        //             }
+        //         }
+        //         return -1;
+        //     };
+        //     var deregisterCallback = function(msg) {
+        //         $scope.$apply(function() {
+        //             var clientIdx = getClientIdx(JSON.parse(msg.data));
+        //             if(clientIdx >= 0) {
+        //                 $scope.clients.splice(clientIdx, 1);
+        //             }
+        //         });
+        //     };
+        //     $scope.eventsource.addEventListener('DEREGISTRATION', deregisterCallback, false);
+        // });
 }]);
 
 lwLightControllers.controller('LightDetailCtrl', [
@@ -155,7 +165,7 @@ lwLightControllers.controller('LightDetailCtrl', [
         // get client details
         $http.get('api/clients/' + $routeParams.clientId)
         .error(function(data, status, headers, config) {
-            $scope.error = "Unable get client " + $routeParams.clientId+" : "+ status + " " + data;  
+            $scope.error = "Unable get client " + $routeParams.clientId+" : "+ status + " " + data;
             console.error($scope.error);
         })
         .success(function(data, status, headers, config) {
