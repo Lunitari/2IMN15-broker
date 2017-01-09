@@ -23,12 +23,6 @@ public class User {
 	}
 	
 	public int checkLogin(String password){
-		if(password.equals(Password)){
-			if (AtDesk)
-				return 1;
-			else
-				return 2;
-		}
-		return 0;
+		return password.equals(Password) ? AtDesk ? 1 : 2 : 0;
 	}
 }

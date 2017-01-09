@@ -10,7 +10,7 @@ AuthController.controller('AuthCtrl', [
 		$scope.loginUser = function() {
 			
 			
-			$http.post('api/login/'+$scope.username, $scope.password). error(function(data, status, headers, config){
+			$http.post('api/login/'+$scope.username, "password:"+$scope.password). error(function(data, status, headers, config){
 	            $scope.error = "Error: " + status + " " + data;
 	            console.error($scope.error);
 	        }).success(function(data, status, headers, config) {

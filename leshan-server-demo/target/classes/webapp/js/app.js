@@ -36,16 +36,34 @@ var leshanApp = angular.module('leshanApp',[
 
 leshanApp.run(function($rootScope) {
 	$rootScope.auth = false;
-	$rootScope.homedir = '#/auth/';
+	$rootScope.homedir = '#/login/';
 });
 
 leshanApp.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
     $routeProvider.
-        when('/clients',           { templateUrl : 'partials/client-list.html',   controller : 'ClientListCtrl' }).
-        when('/clients/:clientId', { templateUrl : 'partials/client-detail.html', controller : 'ClientDetailCtrl' }).
-        when('/security',          { templateUrl : 'partials/security-list.html', controller : 'SecurityCtrl' }).
-        when('/lights',           { templateUrl : 'partials/client-list.html',   controller : 'LightListCtrl' }).
-        when('/lights/:clientId', { templateUrl : 'partials/client-detail.html', controller : 'LightDetailCtrl' }).
-        when('/auth', 				{ templateUrl : 'partials/auth.html', controller : 'AuthCtrl' }).
-        otherwise({ redirectTo : '/auth' });
+        when('/clients',           { templateUrl : 'partials/client-list.html',   controller : 'ClientListCtrl', publicAccess : false }).
+        when('/clients/:clientId', { templateUrl : 'partials/client-detail.html', controller : 'ClientDetailCtrl', publicAccess : false }).
+        when('/security',          { templateUrl : 'partials/security-list.html', controller : 'SecurityCtrl', publicAccess : false }).
+        when('/lights',           { templateUrl : 'partials/client-list.html',   controller : 'LightListCtrl', publicAccess : false }).
+        when('/lights/:clientId', { templateUrl : 'partials/client-detail.html', controller : 'LightDetailCtrl', publicAccess : false }).
+        when('/login', 				{ templateUrl : 'partials/auth.html', controller : 'AuthCtrl', publicAccess : true }).
+        otherwise({ redirectTo : '/login' });
 }]);
+
+
+
+leshanApp.run(function($rootScope, $location, $route) {
+
+    var routesOpenToPublic = [];
+    angular.forEach($route.routes, function(route, path) {
+    	// push route onto routesOpenToPublic if it has a truthy publicAccess value
+    	route.publicAccess && (routesOpenToPublic.push(path));
+    });
+
+    $rootScope.$on('$routeChangeStart', function(event, nextLoc, currentLoc) {
+        var closedToPublic = (-1 === routesOpenToPublic.indexOf($location.path()));
+        if(closedToPublic && !$rootScope.auth) {
+            $location.path('/login');
+        }
+    });
+});
