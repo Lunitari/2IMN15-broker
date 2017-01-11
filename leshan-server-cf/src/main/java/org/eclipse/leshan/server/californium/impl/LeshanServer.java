@@ -149,7 +149,6 @@ public class LeshanServer implements LwM2mServer {
 
             @Override
             public void registered(final Registration registration) {
-            	System.out.println("New client");
             }
         });
 

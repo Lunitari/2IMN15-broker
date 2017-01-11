@@ -63,11 +63,11 @@ import com.google.gson.JsonSyntaxException;
 /**
  * Service HTTP REST API calls.
  */
-public class BrokerServlet extends HttpServlet {
+public class UserServlet extends HttpServlet {
 
     private static final String FORMAT_PARAM = "format";
 
-    private static final Logger LOG = LoggerFactory.getLogger(BrokerServlet.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UserServlet.class);
 
     private static final long TIMEOUT = 5000; // ms
 
@@ -75,24 +75,16 @@ public class BrokerServlet extends HttpServlet {
 
     private final LwM2mServer server;
     
-    private String[] Lights;
-    private String[] Sensors;
     private User[] users;
-    
-    public BrokerServlet(LwM2mServer server, int securePort) {
+
+    public UserServlet(LwM2mServer server, int securePort) {
         this.server = server;
-        
-        int nrusers = 2;
-        users = new User[nrusers];
+      
+        users = new User[2];
         users[0] = new User("Peter", 25, "Hoek, Peter","p.hoek@tue.nl","12345",true);
         users[1] = new User("Mark", 22, "Hoek, Mark","m.hoek@tue.nl","54321",false);
-    
     }
-    
-    public void getAvailableLights(User user) {
-    	
-    }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -118,56 +110,50 @@ public class BrokerServlet extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-    	String[] path = StringUtils.split(req.getPathInfo(), '/');
-    	String reqType = path[0];
-    	
-    	
-    	if (reqType.equals("login")) {
-    		String userID = path[1];
-            String data = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-            String[] input = StringUtils.split(data, ':');
-            if (input.length >= 1){
-    	        if (input[0].equals("login")){
-    		        for(int i = 0; i < users.length; i++){
-    		        	if(users[i].UserID.toLowerCase().equals(userID.toLowerCase())){
-    		        		int correctLogin = users[i].checkLogin(input[1]);
-    		        		if (correctLogin == 1){
-    		                    resp.setContentType("text/plain");
-    		                    String response = "correctLogin";
-    		                    resp.getOutputStream().write(response.getBytes("UTF-8"));
-    		                    resp.setStatus(HttpServletResponse.SC_OK);
-    		                    return;
-    		        		}
-    		        		else if (correctLogin == 2){
-    		        			resp.setContentType("text/plain");
-    		                    String response = "notAtDesk";
-    		                    resp.getOutputStream().write(response.getBytes("UTF-8"));
-    		                    resp.setStatus(HttpServletResponse.SC_OK);
-    		                    return;
-    		        		}
-    		        		else {
-    		        			resp.setStatus(HttpServletResponse.SC_ACCEPTED);
-    		        	        resp.getWriter().format("Invalid username or password").flush();
-    		        	        return;
-    		        		}
-    		        	}
-    		        }
-    	        }
-    	        else if (input[0].equals("status")){
-    	        	for (int i = 0; i < users.length; i++) {
-    	        		if (users[i].UserID.equals(userID)){
-    	        			users[i].updatePresenceUser(Boolean.parseBoolean(input[1]));
-    	        			resp.setStatus(HttpServletResponse.SC_ACCEPTED);
-    	        	        resp.getWriter().format("Status changed").flush();
-    	        	        return;
-    	        		}
-    	        	}
-    	        }
-            }
-    	}
-        
+        String[] path = StringUtils.split(req.getPathInfo(), '/');
+        String userID = path[0];
+        String data = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+        String[] input = StringUtils.split(data, ':');
+        if (input.length >= 2){
+	        if (input[0].equals("login")){
+		        for(int i = 0; i < users.length; i++){
+		        	if(users[i].UserID.toLowerCase().equals(userID.toLowerCase())){
+		        		int correctLogin = users[i].checkLogin(input[1]);
+		        		if (correctLogin == 1){
+		                    resp.setContentType("text/plain");
+		                    String response = "correctLogin";
+		                    resp.getOutputStream().write(response.getBytes("UTF-8"));
+		                    resp.setStatus(HttpServletResponse.SC_OK);
+		                    return;
+		        		}
+		        		else if (correctLogin == 2){
+		        			resp.setContentType("text/plain");
+		                    String response = "notAtDesk";
+		                    resp.getOutputStream().write(response.getBytes("UTF-8"));
+		                    resp.setStatus(HttpServletResponse.SC_OK);
+		                    return;
+		        		}
+		        		else {
+		        			resp.setStatus(HttpServletResponse.SC_ACCEPTED);
+		        	        resp.getWriter().format("Invalid username or password").flush();
+		        	        return;
+		        		}
+		        	}
+		        }
+	        }
+	        else if (input[0].equals("status")){
+	        	for (int i = 0; i < users.length; i++) {
+	        		if (users[i].UserID.equals(userID)){
+	        			users[i].updatePresenceUser(Boolean.parseBoolean(input[1]));
+	        			resp.setStatus(HttpServletResponse.SC_ACCEPTED);
+	        	        resp.getWriter().format("Status changed").flush();
+	        	        return;
+	        		}
+	        	}
+	        }
+        }
         resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        resp.getWriter().format("Not supported operation").flush();
+        resp.getWriter().format("No registered user with id '%s'", userID).flush();
     }
 
     @Override

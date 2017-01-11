@@ -61,15 +61,6 @@ lwLightControllers.controller('LightListCtrl', [
         $scope.showClient = function(light) {
             $location.path('/lights/' + light.lightId);
         };
-        
-        // Get the details for all lights
-        $scope.lights.forEach(function(light) {
-        	
-        });
-        
-        
-        
-        
 
         // the tooltip message to display for a client (all standard attributes, plus additional ones)
         // $scope.clientTooltip = function(client) {
@@ -143,8 +134,6 @@ lwLightControllers.controller('LightListCtrl', [
         //     };
         //     $scope.eventsource.addEventListener('DEREGISTRATION', deregisterCallback, false);
         // });
-        
-        
 }]);
 
 lwLightControllers.controller('LightDetailCtrl', [

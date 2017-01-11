@@ -48,9 +48,9 @@ import org.eclipse.leshan.server.californium.LeshanServerBuilder;
 import org.eclipse.leshan.server.californium.impl.LeshanServer;
 import org.eclipse.leshan.server.cluster.RedisRegistrationStore;
 import org.eclipse.leshan.server.cluster.RedisSecurityStore;
-import org.eclipse.leshan.server.demo.servlet.BrokerServlet;
 import org.eclipse.leshan.server.demo.servlet.ClientServlet;
 import org.eclipse.leshan.server.demo.servlet.EventServlet;
+import org.eclipse.leshan.server.demo.servlet.UserServlet;
 import org.eclipse.leshan.server.demo.servlet.ObjectSpecServlet;
 import org.eclipse.leshan.server.demo.servlet.SecurityServlet;
 import org.eclipse.leshan.server.impl.FileSecurityStore;
@@ -257,9 +257,9 @@ public class LeshanServerDemo {
         ServletHolder objectSpecServletHolder = new ServletHolder(new ObjectSpecServlet(lwServer.getModelProvider()));
         root.addServlet(objectSpecServletHolder, "/api/objectspecs/*");
 
-        ServletHolder brokerServletHolder = new ServletHolder(
-                new BrokerServlet(lwServer, lwServer.getSecureAddress().getPort()));
-        root.addServlet(brokerServletHolder, "/api/broker/*");
+        ServletHolder userServletHolder = new ServletHolder(
+                new UserServlet(lwServer, lwServer.getSecureAddress().getPort()));
+        root.addServlet(userServletHolder, "/api/users/*");
 
         // Start Jetty & Leshan
         lwServer.start();
