@@ -18,9 +18,9 @@ AuthController.controller('AuthCtrl', [
         		if(data === 'correctLogin')
     			{
         			$rootScope.auth = true;
-    	   			$rootScope.user = "Peter";
-    	   			$location.path('/lights/');
-    	   			$rootScope.homedir = '#/lights/';
+    	   			$rootScope.user = $scope.username;
+    	   			$location.path('/clients/');
+    	   			$rootScope.homedir = '#/clients/';
     			}
         		else if (data === 'notAtDesk'){
     				$scope.error = "You are currently not at your desk.";
