@@ -10,7 +10,7 @@ AuthController.controller('AuthCtrl', [
 		$scope.loginUser = function() {
 
 
-			$http.post('api/users/'+$scope.username, "login:"+$scope.password). error(function(data, status, headers, config){
+			$http.post('api/broker/login/'+$scope.username, "login:"+$scope.password). error(function(data, status, headers, config){
 	            $scope.error = "Error: " + status + " " + data;
 	            console.error($scope.error);
 	        }).success(function(data, status, headers, config) {
@@ -18,9 +18,11 @@ AuthController.controller('AuthCtrl', [
         		if(data === 'correctLogin')
     			{
         			$rootScope.auth = true;
-    	   			$rootScope.user = "Peter";
-    	   			$location.path('/lights/');
-    	   			$rootScope.homedir = '#/lights/';
+    	   			$rootScope.user = $scope.username;
+//    	   			$location.path('/lights/');
+//    	   			$rootScope.homedir = '#/lights/';
+    	   			$location.path('/clients/');
+    	   			$rootScope.homedir = '#/clients/';
     			}
         		else if (data === 'notAtDesk'){
     				$scope.error = "You are currently not at your desk.";
