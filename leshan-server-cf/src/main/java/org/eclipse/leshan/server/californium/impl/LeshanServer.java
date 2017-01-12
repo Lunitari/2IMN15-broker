@@ -149,6 +149,7 @@ public class LeshanServer implements LwM2mServer {
 
             @Override
             public void registered(final Registration registration) {
+            	//TODO: pass registered clients to broker. (Outside of scope)
             }
         });
 

@@ -14,7 +14,7 @@
  *     Sierra Wireless - initial API and implementation
  *******************************************************************************/
 package org.eclipse.leshan.server.demo.servlet;
-
+import org.json.*
 import java.io.IOException;
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -63,22 +63,32 @@ import com.google.gson.JsonSyntaxException;
 /**
  * Service HTTP REST API calls.
  */
-public class UserServlet extends HttpServlet {
+public class BrokerServlet extends HttpServlet {
 
     private static final String FORMAT_PARAM = "format";
 
-    private static final Logger LOG = LoggerFactory.getLogger(UserServlet.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BrokerServlet.class);
 
     private static final long TIMEOUT = 5000; // ms
 
     private static final long serialVersionUID = 1L;
 
     private final LwM2mServer server;
+    private final Gson gson;
     
-    private User[] users;
+    private static User[] users;
+    private static String[] lights;
+    private static String[] sensors;
 
-    public UserServlet(LwM2mServer server, int securePort) {
+    public BrokerServlet(LwM2mServer server, int securePort) {
         this.server = server;
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeHierarchyAdapter(Registration.class, new RegistrationSerializer(securePort));
+        gsonBuilder.registerTypeHierarchyAdapter(LwM2mResponse.class, new ResponseSerializer());
+        gsonBuilder.registerTypeHierarchyAdapter(LwM2mNode.class, new LwM2mNodeSerializer());
+        gsonBuilder.registerTypeHierarchyAdapter(LwM2mNode.class, new LwM2mNodeDeserializer());
+        gsonBuilder.setDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+        this.gson = gsonBuilder.create();
       
         users = new User[2];
         users[0] = new User("Peter", 25, "Hoek, Peter","p.hoek@tue.nl","12345",true);
@@ -90,7 +100,31 @@ public class UserServlet extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-    	// delete operations not allowed.
+    	
+    	String[] path = StringUtils.split(req.getPathInfo(), '/');
+        String typeRequest = path[0];
+        
+        if (typeRequest.equals("lights")) {
+        	Collection<Registration> registrations = server.getRegistrationService().getAllRegistrations();
+
+            String json = this.gson.toJson(registrations.toArray(new Registration[] {}));
+            String response = "[";
+            String[] entities = StringUtils.split(json, ',');
+            int index = 0;
+            int ind = 0;
+            while((ind = json.indexOf("\"endpoint\":\"", index)) > 0)
+            {
+            	int ind2 = json.indexOf("\",\"", ind);
+            	response += "\"endpoint:\"";
+            }
+            JSONObject j = new JSONObject(json);
+            resp.setContentType("application/json");
+            resp.getOutputStream().write(json.getBytes("UTF-8"));
+            resp.setStatus(HttpServletResponse.SC_OK);
+            return;        	
+        }
+
+    	
 	    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 	    resp.getWriter().append("Operation not allowed").flush();
     }
@@ -100,8 +134,7 @@ public class UserServlet extends HttpServlet {
      */
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        
-
+    	
     }
 
     /**
@@ -111,49 +144,60 @@ public class UserServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String[] path = StringUtils.split(req.getPathInfo(), '/');
-        String userID = path[0];
-        String data = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-        String[] input = StringUtils.split(data, ':');
-        if (input.length >= 2){
-	        if (input[0].equals("login")){
-		        for(int i = 0; i < users.length; i++){
-		        	if(users[i].UserID.toLowerCase().equals(userID.toLowerCase())){
-		        		int correctLogin = users[i].checkLogin(input[1]);
-		        		if (correctLogin == 1){
-		                    resp.setContentType("text/plain");
-		                    String response = "correctLogin";
-		                    resp.getOutputStream().write(response.getBytes("UTF-8"));
-		                    resp.setStatus(HttpServletResponse.SC_OK);
-		                    return;
-		        		}
-		        		else if (correctLogin == 2){
-		        			resp.setContentType("text/plain");
-		                    String response = "notAtDesk";
-		                    resp.getOutputStream().write(response.getBytes("UTF-8"));
-		                    resp.setStatus(HttpServletResponse.SC_OK);
-		                    return;
-		        		}
-		        		else {
-		        			resp.setStatus(HttpServletResponse.SC_ACCEPTED);
-		        	        resp.getWriter().format("Invalid username or password").flush();
-		        	        return;
-		        		}
-		        	}
-		        }
-	        }
-	        else if (input[0].equals("status")){
-	        	for (int i = 0; i < users.length; i++) {
-	        		if (users[i].UserID.equals(userID)){
-	        			users[i].updatePresenceUser(Boolean.parseBoolean(input[1]));
-	        			resp.setStatus(HttpServletResponse.SC_ACCEPTED);
-	        	        resp.getWriter().format("Status changed").flush();
-	        	        return;
-	        		}
-	        	}
-	        }
+        String typeRequest = path[0];
+        
+        if (typeRequest.equals("users")) {
+        	
+        	// Specific Users (Login/update sensor status)
+        	if (path.length > 1) {
+            	String userID = path[1];
+                String data = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+                String[] input = StringUtils.split(data, ':');
+                if (input.length >= 2){
+        	        if (input[0].equals("login")){
+        		        for(int i = 0; i < users.length; i++){
+        		        	if(users[i].UserID.toLowerCase().equals(userID.toLowerCase())){
+        		        		int correctLogin = users[i].checkLogin(input[1]);
+        		        		if (correctLogin == 1){
+        		                    resp.setContentType("text/plain");
+        		                    String response = "correctLogin";
+        		                    resp.getOutputStream().write(response.getBytes("UTF-8"));
+        		                    resp.setStatus(HttpServletResponse.SC_OK);
+        		                    return;
+        		        		}
+        		        		else if (correctLogin == 2){
+        		        			resp.setContentType("text/plain");
+        		                    String response = "notAtDesk";
+        		                    resp.getOutputStream().write(response.getBytes("UTF-8"));
+        		                    resp.setStatus(HttpServletResponse.SC_OK);
+        		                    return;
+        		        		}
+        		        		else {
+        		        			resp.setStatus(HttpServletResponse.SC_ACCEPTED);
+        		        	        resp.getWriter().format("Invalid username or password").flush();
+        		        	        return;
+        		        		}
+        		        	}
+        		        }
+        	        }
+        	        else if (input[0].equals("status")){
+        	        	for (int i = 0; i < users.length; i++) {
+        	        		if (users[i].UserID.equals(userID)){
+        	        			users[i].updatePresenceUser(Boolean.parseBoolean(input[1]));
+        	        			resp.setStatus(HttpServletResponse.SC_ACCEPTED);
+        	        	        resp.getWriter().format("Status changed").flush();
+        	        	        return;
+        	        		}
+        	        	}
+        	        }
+                }
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                resp.getWriter().format("No registered user with id '%s'", userID).flush();
+
+        	}
         }
         resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        resp.getWriter().format("No registered user with id '%s'", userID).flush();
+        resp.getWriter().format("Invalid operation").flush();
     }
 
     @Override
