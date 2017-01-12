@@ -14,7 +14,7 @@
  *     Sierra Wireless - initial API and implementation
  *******************************************************************************/
 package org.eclipse.leshan.server.demo.servlet;
-import org.json.*
+import org.json.*;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -108,16 +108,24 @@ public class BrokerServlet extends HttpServlet {
         	Collection<Registration> registrations = server.getRegistrationService().getAllRegistrations();
 
             String json = this.gson.toJson(registrations.toArray(new Registration[] {}));
-            String response = "[";
-            String[] entities = StringUtils.split(json, ',');
-            int index = 0;
-            int ind = 0;
-            while((ind = json.indexOf("\"endpoint\":\"", index)) > 0)
-            {
-            	int ind2 = json.indexOf("\",\"", ind);
-            	response += "\"endpoint:\"";
+
+            JSONArray j = new JSONArray(json);
+            String response = "";
+            for(int i = 0; i < j.length(); i++) {
+            	JSONObject c = j.getJSONObject(i);
+            			response += c.getString("endpoint");
             }
-            JSONObject j = new JSONObject(json);
+            
+//            String response = j.getJSONObject(i)
+//            String response = "[";
+//            String[] entities = StringUtils.split(json, ',');
+//            int index = 0;
+//            int ind = 0;
+//            while((ind = json.indexOf("\"endpoint\":\"", index)) > 0)
+//            {
+//            	int ind2 = json.indexOf("\",\"", ind);
+//            	response += "\"endpoint:\"";
+//            }
             resp.setContentType("application/json");
             resp.getOutputStream().write(json.getBytes("UTF-8"));
             resp.setStatus(HttpServletResponse.SC_OK);
