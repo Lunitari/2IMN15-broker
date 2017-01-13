@@ -1,15 +1,15 @@
 /*******************************************************************************
  * Copyright (c) 2013-2015 Sierra Wireless and others.
- * 
+ *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * and Eclipse Distribution License v1.0 which accompany this distribution.
- * 
+ *
  * The Eclipse Public License is available at
  *    http://www.eclipse.org/legal/epl-v10.html
  * and the Eclipse Distribution License is available at
  *    http://www.eclipse.org/org/documents/edl-v10.html.
- * 
+ *
  * Contributors:
  *     Sierra Wireless - initial API and implementation
  *******************************************************************************/
@@ -75,7 +75,7 @@ public class BrokerServlet extends HttpServlet {
 
     private final LwM2mServer server;
     private final Gson gson;
-    
+
     private static User[] users;
     private static String[] lights;
     private static String[] sensors;
@@ -89,7 +89,7 @@ public class BrokerServlet extends HttpServlet {
         gsonBuilder.registerTypeHierarchyAdapter(LwM2mNode.class, new LwM2mNodeDeserializer());
         gsonBuilder.setDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
         this.gson = gsonBuilder.create();
-      
+
         users = new User[2];
         users[0] = new User("Peter", 25, "Hoek, Peter","p.hoek@tue.nl","12345",true);
         users[1] = new User("Mark", 22, "Hoek, Mark","m.hoek@tue.nl","54321",false);
@@ -100,22 +100,27 @@ public class BrokerServlet extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-    	
+
     	String[] path = StringUtils.split(req.getPathInfo(), '/');
         String typeRequest = path[0];
-        
+
         if (typeRequest.equals("lights")) {
         	Collection<Registration> registrations = server.getRegistrationService().getAllRegistrations();
 
             String json = this.gson.toJson(registrations.toArray(new Registration[] {}));
 
             JSONArray j = new JSONArray(json);
-            String response = "";
+            JSONArray response = new JSONArray();
             for(int i = 0; i < j.length(); i++) {
             	JSONObject c = j.getJSONObject(i);
-            			response += c.getString("endpoint");
+        			String endpoint = c.getString("endpoint");
+              if (endpoint.contains("Light") {
+                JSONObject b = new JSONObject();
+                b.put("endpoint", endpoint);
+                // TODO: add b to response
+              }
             }
-            
+
 //            String response = j.getJSONObject(i)
 //            String response = "[";
 //            String[] entities = StringUtils.split(json, ',');
@@ -127,12 +132,35 @@ public class BrokerServlet extends HttpServlet {
 //            	response += "\"endpoint:\"";
 //            }
             resp.setContentType("application/json");
-            resp.getOutputStream().write(json.getBytes("UTF-8"));
+            resp.getOutputStream().write(response.toString().getBytes("UTF-8"));
+            // resp.getOutputStream().write(json.getBytes("UTF-8"));
             resp.setStatus(HttpServletResponse.SC_OK);
-            return;        	
+            return;
+        }
+        else if (typeRequest.equals("sensors")) {
+        	Collection<Registration> registrations = server.getRegistrationService().getAllRegistrations();
+
+            String json = this.gson.toJson(registrations.toArray(new Registration[] {}));
+
+            JSONArray j = new JSONArray(json);
+            JSONArray response = new JSONArray();
+            for(int i = 0; i < j.length(); i++) {
+            	JSONObject c = j.getJSONObject(i);
+        			String endpoint = c.getString("endpoint");
+              if (endpoint.contains("Sensor") {
+                JSONObject b = new JSONObject();
+                b.put("endpoint", endpoint);
+                // TODO: add b to response
+              }
+            }
+            resp.setContentType("application/json");
+            resp.getOutputStream().write(response.toString().getBytes("UTF-8"));
+            // resp.getOutputStream().write(json.getBytes("UTF-8"));
+            resp.setStatus(HttpServletResponse.SC_OK);
+            return;
         }
 
-    	
+
 	    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 	    resp.getWriter().append("Operation not allowed").flush();
     }
@@ -142,7 +170,7 @@ public class BrokerServlet extends HttpServlet {
      */
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-    	
+
     }
 
     /**
@@ -153,9 +181,9 @@ public class BrokerServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String[] path = StringUtils.split(req.getPathInfo(), '/');
         String typeRequest = path[0];
-        
+
         if (typeRequest.equals("users")) {
-        	
+
         	// Specific Users (Login/update sensor status)
         	if (path.length > 1) {
             	String userID = path[1];
