@@ -94,6 +94,25 @@ public class BrokerServlet extends HttpServlet {
         users[0] = new User("Peter", 25, "Hoek, Peter","p.hoek@tue.nl","12345",true);
         users[1] = new User("Mark", 22, "Hoek, Mark","m.hoek@tue.nl","54321",false);
     }
+    
+    public JSONArray findClientType(String type) {
+    	Collection<Registration> registrations = server.getRegistrationService().getAllRegistrations();
+
+        String json = this.gson.toJson(registrations.toArray(new Registration[] {}));
+
+        JSONArray j = new JSONArray(json);
+        JSONArray response = new JSONArray();
+        for(int i = 0; i < j.length(); i++) {
+        	JSONObject c = j.getJSONObject(i);
+    			String endpoint = c.getString("endpoint");
+          if (endpoint.toLowerCase().contains(type)) {
+            JSONObject b = new JSONObject();
+            b.put("endpoint", endpoint);
+            response.put(b);
+          }
+        }
+        return response;
+    }
 
     /**
      * {@inheritDoc}
@@ -104,61 +123,14 @@ public class BrokerServlet extends HttpServlet {
     	String[] path = StringUtils.split(req.getPathInfo(), '/');
         String typeRequest = path[0];
 
-        if (typeRequest.equals("lights")) {
-        	Collection<Registration> registrations = server.getRegistrationService().getAllRegistrations();
-
-            String json = this.gson.toJson(registrations.toArray(new Registration[] {}));
-
-            JSONArray j = new JSONArray(json);
-            JSONArray response = new JSONArray();
-            for(int i = 0; i < j.length(); i++) {
-            	JSONObject c = j.getJSONObject(i);
-        			String endpoint = c.getString("endpoint");
-              if (endpoint.contains("Light") {
-                JSONObject b = new JSONObject();
-                b.put("endpoint", endpoint);
-                // TODO: add b to response
-              }
-            }
-
-//            String response = j.getJSONObject(i)
-//            String response = "[";
-//            String[] entities = StringUtils.split(json, ',');
-//            int index = 0;
-//            int ind = 0;
-//            while((ind = json.indexOf("\"endpoint\":\"", index)) > 0)
-//            {
-//            	int ind2 = json.indexOf("\",\"", ind);
-//            	response += "\"endpoint:\"";
-//            }
-            resp.setContentType("application/json");
+        if (typeRequest.equals("lights") || typeRequest.equals("sensors")) {
+        	JSONArray response = findClientType(typeRequest.substring(0, typeRequest.length()-1));
+        	resp.setContentType("application/json");
             resp.getOutputStream().write(response.toString().getBytes("UTF-8"));
-            // resp.getOutputStream().write(json.getBytes("UTF-8"));
             resp.setStatus(HttpServletResponse.SC_OK);
             return;
         }
-        else if (typeRequest.equals("sensors")) {
-        	Collection<Registration> registrations = server.getRegistrationService().getAllRegistrations();
-
-            String json = this.gson.toJson(registrations.toArray(new Registration[] {}));
-
-            JSONArray j = new JSONArray(json);
-            JSONArray response = new JSONArray();
-            for(int i = 0; i < j.length(); i++) {
-            	JSONObject c = j.getJSONObject(i);
-        			String endpoint = c.getString("endpoint");
-              if (endpoint.contains("Sensor") {
-                JSONObject b = new JSONObject();
-                b.put("endpoint", endpoint);
-                // TODO: add b to response
-              }
-            }
-            resp.setContentType("application/json");
-            resp.getOutputStream().write(response.toString().getBytes("UTF-8"));
-            // resp.getOutputStream().write(json.getBytes("UTF-8"));
-            resp.setStatus(HttpServletResponse.SC_OK);
-            return;
-        }
+        	
 
 
 	    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
