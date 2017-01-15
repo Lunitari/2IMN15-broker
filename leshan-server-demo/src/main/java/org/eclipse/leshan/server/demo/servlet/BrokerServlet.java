@@ -123,13 +123,21 @@ public class BrokerServlet extends HttpServlet {
     	String[] path = StringUtils.split(req.getPathInfo(), '/');
         String typeRequest = path[0];
 
-        if (typeRequest.equals("lights") || typeRequest.equals("sensors")) {
+        if ((typeRequest.equals("lights") || typeRequest.equals("sensors")) && path.length == 1) {
         	JSONArray response = findClientType(typeRequest.substring(0, typeRequest.length()-1));
         	resp.setContentType("application/json");
             resp.getOutputStream().write(response.toString().getBytes("UTF-8"));
             resp.setStatus(HttpServletResponse.SC_OK);
             return;
         }
+        
+        if (typeRequest.equals("lights") && path.length > 2) {
+        	String endpoint = path[1];
+        	Registration light = server.getRegistrationService().getByEndpoint(endpoint);
+//        	light.
+        }
+        
+        
         	
 
 

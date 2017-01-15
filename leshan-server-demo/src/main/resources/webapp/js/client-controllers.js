@@ -74,8 +74,8 @@ lwClientControllers.controller('ClientListCtrl', [
             return tooltip;
         };
 
-        // get the list of connected clients
-        $http.get('api/clients'). error(function(data, status, headers, config){
+        // get the list of connected clients(lights)
+        $http.get('api/clients/lights'). error(function(data, status, headers, config){
             $scope.error = "Unable get client list: " + status + " " + data;
             console.error($scope.error);
         }).success(function(data, status, headers, config) {
@@ -147,8 +147,8 @@ lwClientControllers.controller('ClientDetailCtrl', [
 
         // default format
         $scope.settings={};
-        $scope.settings.multi = {format:"TLV"};
-        $scope.settings.single = {format:"TLV"};
+        $scope.settings.multi = {format:"JSON"};
+        $scope.settings.single = {format:"JSON"};
 
         $scope.clientId = $routeParams.clientId;
 

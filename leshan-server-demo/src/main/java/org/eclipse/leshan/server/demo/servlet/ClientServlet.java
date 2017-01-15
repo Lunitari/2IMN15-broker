@@ -51,6 +51,8 @@ import org.eclipse.leshan.server.demo.servlet.json.RegistrationSerializer;
 import org.eclipse.leshan.server.demo.servlet.json.LwM2mNodeDeserializer;
 import org.eclipse.leshan.server.demo.servlet.json.LwM2mNodeSerializer;
 import org.eclipse.leshan.server.demo.servlet.json.ResponseSerializer;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,6 +76,7 @@ public class ClientServlet extends HttpServlet {
     private final LwM2mServer server;
 
     private final Gson gson;
+//    private 
 
     public ClientServlet(LwM2mServer server, int securePort) {
         this.server = server;
@@ -92,14 +95,49 @@ public class ClientServlet extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
+    	
+    	String pathInfo = req.getPathInfo() == null ? "" : req.getPathInfo();
         // all registered clients
-        if (req.getPathInfo() == null) {
+        if (pathInfo.equals("") || pathInfo.equals("/lights")) {
             Collection<Registration> registrations = server.getRegistrationService().getAllRegistrations();
-
             String json = this.gson.toJson(registrations.toArray(new Registration[] {}));
+            if (pathInfo.equals("/lights")) {
+	            JSONArray clients = new JSONArray(json);
+	            for(int i = clients.length()-1; i >= 0; i--) {
+	            	JSONObject c = clients.getJSONObject(i);
+	            	if (!c.getString("endpoint").toLowerCase().contains("light")) {
+	            		clients.remove(i);
+	            	}
+	            	else {
+	            		Registration registration = server.getRegistrationService().getByEndpoint(c.getString("endpoint"));
+	            		String contentFormatParam = "JSON";
+	                    ContentFormat contentFormat = contentFormatParam != null
+	                            ? ContentFormat.fromName(contentFormatParam.toUpperCase()) : null;
+
+	                    // create & process request
+	                    ReadRequest request = new ReadRequest(contentFormat, "/10250/0/2");
+	                    ReadResponse cResponse = null;
+	                    try {
+							cResponse = server.send(registration, request, TIMEOUT);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+	                    String test = StringUtils.substringBetween(cResponse.getContent().toString(),"value=",", type");
+	                    // TODO: properly filter lights based on user
+	                    if(!test.equals("FREE")) {
+	                    	clients.remove(i);
+	                    }
+	            		
+	//            		this.server.getObservationService().addListener(listener);
+	            		
+	            	}
+	            }
+	            resp.getOutputStream().write(clients.toString().getBytes("UTF-8"));
+            } else {
+                resp.getOutputStream().write(json.getBytes("UTF-8"));
+            }
             resp.setContentType("application/json");
-            resp.getOutputStream().write(json.getBytes("UTF-8"));
             resp.setStatus(HttpServletResponse.SC_OK);
             return;
         }

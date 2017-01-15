@@ -237,6 +237,7 @@ public class LeshanServerDemo {
         Server server = new Server(webPort);
         WebAppContext root = new WebAppContext();
         root.setContextPath("/");
+        //TODO: set the proper path when in .jar
         root.setResourceBase(LeshanServerDemo.class.getClassLoader().getResource("webapp").toExternalForm());
         root.setParentLoaderPriority(true);
         server.setHandler(root);
