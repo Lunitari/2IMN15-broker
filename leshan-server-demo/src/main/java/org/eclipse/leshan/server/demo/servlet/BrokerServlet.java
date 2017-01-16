@@ -78,7 +78,8 @@ public class BrokerServlet extends HttpServlet {
     private final ClientServlet clients;
     private final Gson gson;
 
-    private static User[] users;
+    //private static User[] users;
+    private static ArrayList<User> usersList;
     private static int loggedInUserID;
     private static String[] lights;
     private static String[] sensors;
@@ -95,9 +96,16 @@ public class BrokerServlet extends HttpServlet {
         gsonBuilder.setDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
         this.gson = gsonBuilder.create();
 
-        users = new User[2];
-        users[0] = new User("Peter", 25, "Hoek, Peter","p.hoek@tue.nl","12345",true);
-        users[1] = new User("Mark", 22, "Hoek, Mark","m.hoek@tue.nl","54321",false);
+        
+    //     users = new User[2];
+    //     users[0] = new User("Peter", 25, "Hoek, Peter","p.hoek@tue.nl","12345",true);
+    //     users[1] = new User("Mark", 22, "Hoek, Mark","m.hoek@tue.nl","54321",false);
+    // 
+        usersList=new ArrayList<>();
+        User admin=new User("Office-Admin-0", 0, "Room-0","admin","admin@tue.nl","pswd");
+        admin.updatePresenceUser(true);
+        usersList.add(admin);
+
     }
     
     public static String getUserID() {
@@ -122,6 +130,23 @@ public class BrokerServlet extends HttpServlet {
         }
         return response;
     }
+
+    public void setUsers(String type) {
+        Collection<Registration> registrations = server.getRegistrationService().getAllRegistrations();
+
+        String json = this.gson.toJson(registrations.toArray(new Registration[] {}));
+        
+        JSONArray j = new JSONArray(json);
+        //usersList = new User[j.length()];
+       
+        for(int i = 0; i < j.length(); i++) {
+            JSONObject c = j.getJSONObject(i);
+                usersList.add(new User(c.getString("UserID"),c.getInt("GroupNo"),c.getString("RoomID"),
+                                  c.getString("Name"),c.getString("Email"),c.getString("Password")));
+        }
+        return;
+    }
+
     
     public void updatePriorityOwnership(HttpServletResponse resp, String endpoint, String url) throws IOException {
     	String content = "{\"id\":12,\"value\":\""+url+"\"}";
@@ -231,8 +256,8 @@ public class BrokerServlet extends HttpServlet {
                 if (input.length >= 2){
         	        if (input[0].equals("login")){
         		        for(int i = 0; i < users.length; i++){
-        		        	if(users[i].UserID.toLowerCase().equals(userID.toLowerCase())){
-        		        		int correctLogin = users[i].checkLogin(input[1]);
+        		        	if(usersList.get(i).UserID.toLowerCase().equals(userID.toLowerCase())){
+        		        		int correctLogin = usersList.get(i).checkLogin(input[1]);
         		        		if (correctLogin == 1){
         		                    resp.setContentType("text/plain");
         		                    String response = "correctLogin";
@@ -258,8 +283,8 @@ public class BrokerServlet extends HttpServlet {
         	        }
         	        else if (input[0].equals("status")){
         	        	for (int i = 0; i < users.length; i++) {
-        	        		if (users[i].UserID.equals(userID)){
-        	        			users[i].updatePresenceUser(Boolean.parseBoolean(input[1]));
+        	        		if (usersList.get(i).UserID.equals(userID)){
+        	        			usersList.get(i).updatePresenceUser(Boolean.parseBoolean(input[1]));
         	        			resp.setStatus(HttpServletResponse.SC_ACCEPTED);
         	        	        resp.getWriter().format("Status changed").flush();
         	        	        return;
@@ -271,6 +296,11 @@ public class BrokerServlet extends HttpServlet {
                 resp.getWriter().format("No registered user with id '%s'", userID).flush();
 
         	}
+        }
+
+
+        else if (typeRequest.equals("usersList")) {
+            this.setUsers(req.getReader().lines().collect(Collectors.joining(System.lineSeparator())));
         }
         resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         resp.getWriter().format("Invalid operation").flush();

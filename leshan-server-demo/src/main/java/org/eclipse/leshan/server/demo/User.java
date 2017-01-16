@@ -1,21 +1,30 @@
 package org.eclipse.leshan.server.demo;
 
 public class User {
+//	public String UserID;
+//	public int GroupNr;
+//	public String Username;
+//	public String Email;
+//	private String Password;
+//	private boolean AtDesk;
+	
 	public String UserID;
-	public int GroupNr;
-	public String Username;
+	public int GroupNo;
+	public String RoomId;
+	public String Name;
+//	private String Email;
 	public String Email;
 	private String Password;
 	private boolean AtDesk;
 	
-	public User(String userID, int groupNr, String username, String email, String password, boolean atDesk) {
+	public User(String userID, int groupNo, String roomId, String name, String email, String password) {
         UserID = userID;
-        groupNr = groupNr;
-        Username = username;
+        GroupNo = groupNo;
+        RoomId=roomId;
+        Name = name;
         Email = email;
         Password = password;
-        AtDesk = atDesk;
-        
+//      AtDesk = atDesk;      
     }
 	
 	public void updatePresenceUser(boolean atDesk){
