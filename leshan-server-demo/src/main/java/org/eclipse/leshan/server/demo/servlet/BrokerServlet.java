@@ -16,6 +16,7 @@
 package org.eclipse.leshan.server.demo.servlet;
 import org.json.*;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -109,7 +110,7 @@ public class BrokerServlet extends HttpServlet {
     }
     
     public static String getUserID() {
-    	return users[loggedInUserID].UserID;
+    	return usersList.get(loggedInUserID).UserID;
     }
     
     public JSONArray findClientType(String type) {
@@ -132,12 +133,7 @@ public class BrokerServlet extends HttpServlet {
     }
 
     public void setUsers(String type) {
-        Collection<Registration> registrations = server.getRegistrationService().getAllRegistrations();
-
-        String json = this.gson.toJson(registrations.toArray(new Registration[] {}));
-        
-        JSONArray j = new JSONArray(json);
-        //usersList = new User[j.length()];
+        JSONArray j = new JSONArray(type);
        
         for(int i = 0; i < j.length(); i++) {
             JSONObject c = j.getJSONObject(i);
@@ -255,7 +251,7 @@ public class BrokerServlet extends HttpServlet {
                 String[] input = StringUtils.split(data, ':');
                 if (input.length >= 2){
         	        if (input[0].equals("login")){
-        		        for(int i = 0; i < users.length; i++){
+        		        for(int i = 0; i < usersList.size(); i++){
         		        	if(usersList.get(i).UserID.toLowerCase().equals(userID.toLowerCase())){
         		        		int correctLogin = usersList.get(i).checkLogin(input[1]);
         		        		if (correctLogin == 1){
@@ -282,7 +278,7 @@ public class BrokerServlet extends HttpServlet {
         		        }
         	        }
         	        else if (input[0].equals("status")){
-        	        	for (int i = 0; i < users.length; i++) {
+        	        	for (int i = 0; i < usersList.size(); i++) {
         	        		if (usersList.get(i).UserID.equals(userID)){
         	        			usersList.get(i).updatePresenceUser(Boolean.parseBoolean(input[1]));
         	        			resp.setStatus(HttpServletResponse.SC_ACCEPTED);
