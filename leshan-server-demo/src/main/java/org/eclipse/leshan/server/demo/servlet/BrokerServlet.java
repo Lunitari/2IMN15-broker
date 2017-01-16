@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.eclipse.jetty.server.Request;
 import org.eclipse.leshan.core.node.LwM2mNode;
 import org.eclipse.leshan.core.node.LwM2mObjectInstance;
 import org.eclipse.leshan.core.node.LwM2mSingleResource;
@@ -74,14 +75,18 @@ public class BrokerServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private final LwM2mServer server;
+    private final ClientServlet clients;
     private final Gson gson;
 
     private static User[] users;
+    private static int loggedInUserID;
     private static String[] lights;
     private static String[] sensors;
 
-    public BrokerServlet(LwM2mServer server, int securePort) {
+    public BrokerServlet(ClientServlet clients, LwM2mServer server, int securePort) {
         this.server = server;
+        this.clients = clients;
+        loggedInUserID = -1;
         GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeHierarchyAdapter(Registration.class, new RegistrationSerializer(securePort));
         gsonBuilder.registerTypeHierarchyAdapter(LwM2mResponse.class, new ResponseSerializer());
@@ -93,6 +98,10 @@ public class BrokerServlet extends HttpServlet {
         users = new User[2];
         users[0] = new User("Peter", 25, "Hoek, Peter","p.hoek@tue.nl","12345",true);
         users[1] = new User("Mark", 22, "Hoek, Mark","m.hoek@tue.nl","54321",false);
+    }
+    
+    public static String getUserID() {
+    	return users[loggedInUserID].UserID;
     }
     
     public JSONArray findClientType(String type) {
@@ -113,6 +122,36 @@ public class BrokerServlet extends HttpServlet {
         }
         return response;
     }
+    
+    public void updatePriorityOwnership(HttpServletResponse resp, String endpoint, String url) throws IOException {
+    	String content = "{\"id\":12,\"value\":\""+url+"\"}";
+    	LwM2mNode node;
+        try {
+            node = gson.fromJson(content, LwM2mNode.class);
+	        WriteRequest request = new WriteRequest(Mode.REPLACE, ContentFormat.fromName("JSON"), "/10250/0/12", node);
+			WriteResponse cResponse = server.send(server.getRegistrationService().getByEndpoint(endpoint), request, TIMEOUT);
+			String response = null;
+	        if (cResponse == null) {
+	            LOG.warn(String.format("Request %s timed out.", "/update/"+endpoint));
+	            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+	            resp.getWriter().append("Request timeout").flush();
+	        } else {
+	            response = this.gson.toJson(cResponse);
+	            resp.setContentType("application/json");
+	            resp.getOutputStream().write(response.getBytes());
+	            resp.setStatus(HttpServletResponse.SC_OK);
+	        }
+        } catch (JsonSyntaxException e) {
+            throw new IllegalArgumentException("unable to parse json to tlv:" + e.getMessage(), e);
+        }catch (InterruptedException e) {
+        	LOG.warn("Invalid request or response", e);
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().append(e.getMessage()).flush();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
 
     /**
      * {@inheritDoc}
@@ -131,10 +170,17 @@ public class BrokerServlet extends HttpServlet {
             return;
         }
         
-        if (typeRequest.equals("lights") && path.length > 2) {
-        	String endpoint = path[1];
-        	Registration light = server.getRegistrationService().getByEndpoint(endpoint);
-//        	light.
+        if ((typeRequest.equals("lights") || typeRequest.equals("sensors")) && path.length > 2) {
+        	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
+        	((Request) req).setPathInfo(newPathInfo);
+        	clients.doGet(req, resp);
+        	return;
+        }
+        
+        // test for modifying requests.
+        if(typeRequest.equals("update")) {
+        	updatePriorityOwnership(resp, path[1], "/api/broker/"+path[1]+"/test.json");
+            return;
         }
         
         
@@ -150,7 +196,20 @@ public class BrokerServlet extends HttpServlet {
      */
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
+    	String[] path = StringUtils.split(req.getPathInfo(), '/');
+        String typeRequest = path[0];
+        
+    	if ((typeRequest.equals("lights") || typeRequest.equals("sensors")) && path.length > 2) {
+        	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
+        	((Request) req).setPathInfo(newPathInfo);
+        	clients.doDelete(req, resp);
+        	return;
+        }
+    	
+    	if(typeRequest.equals("update")) {
+        	updatePriorityOwnership(resp, path[1], "/api/broker/"+path[1]+"/OwnershipPriority.json");
+            return;
+        }
     }
 
     /**
@@ -179,6 +238,7 @@ public class BrokerServlet extends HttpServlet {
         		                    String response = "correctLogin";
         		                    resp.getOutputStream().write(response.getBytes("UTF-8"));
         		                    resp.setStatus(HttpServletResponse.SC_OK);
+        		                    loggedInUserID = i;
         		                    return;
         		        		}
         		        		else if (correctLogin == 2){
@@ -218,7 +278,16 @@ public class BrokerServlet extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-    	// delete operations not allowed.
+    	String[] path = StringUtils.split(req.getPathInfo(), '/');
+        String typeRequest = path[0];
+        
+    	if ((typeRequest.equals("lights") || typeRequest.equals("sensors")) && path.length > 2) {
+        	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
+        	((Request) req).setPathInfo(newPathInfo);
+        	clients.doDelete(req, resp);
+        	return;
+        }
+    	
 	    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 	    resp.getWriter().append("Operation not allowed").flush();
     }

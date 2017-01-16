@@ -259,7 +259,7 @@ public class LeshanServerDemo {
         root.addServlet(objectSpecServletHolder, "/api/objectspecs/*");
 
         ServletHolder brokerServletHolder = new ServletHolder(
-                new BrokerServlet(lwServer, lwServer.getSecureAddress().getPort()));
+                new BrokerServlet((ClientServlet) clientServletHolder.getServlet(), lwServer, lwServer.getSecureAddress().getPort()));
         root.addServlet(brokerServletHolder, "/api/broker/*");
 
         // Start Jetty & Leshan
