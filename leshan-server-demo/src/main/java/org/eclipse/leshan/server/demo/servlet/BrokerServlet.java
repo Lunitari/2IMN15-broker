@@ -15,6 +15,8 @@
  *******************************************************************************/
 package org.eclipse.leshan.server.demo.servlet;
 import org.json.*;
+
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -227,10 +229,10 @@ public class BrokerServlet extends HttpServlet {
         	return;
         }
     	
-    	if(typeRequest.equals("update")) {
-        	updatePriorityOwnership(resp, path[1], "/api/broker/"+path[1]+"/OwnershipPriority.json");
-            return;
-        }
+//    	if(typeRequest.equals("update")) {
+//        	updatePriorityOwnership(resp, path[1], "/api/broker/"+path[1]+"/OwnershipPriority.json");
+//            return;
+//        }
     }
 
     /**
@@ -243,7 +245,7 @@ public class BrokerServlet extends HttpServlet {
         String typeRequest = path[0];
 
         if (typeRequest.equals("users")) {
-
+        	
         	// Specific Users (Login/update sensor status)
         	if (path.length > 1) {
             	String userID = path[1];
@@ -296,8 +298,30 @@ public class BrokerServlet extends HttpServlet {
 
 
         else if (typeRequest.equals("usersList")) {
-            this.setUsers(req.getReader().lines().collect(Collectors.joining(System.lineSeparator())));
+            
+        	setUsers(req.getReader().lines().collect(Collectors.joining(System.lineSeparator())));
         }
+        
+        else if (typeRequest.equals("ligths") && path.length > 2 && path[2].equals("update") ) {
+        	
+        	String dataUpdate = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));      	
+        	String pathJSON = "/home/pi/lightdevices/"+path[1]+"OwnershipPriority.json";
+        	try {
+        		
+        		FileWriter file = new FileWriter(pathJSON);
+        		file.write(dataUpdate);
+        		file.close();
+        	} catch (IOException e) {
+        	   // do something
+        	}
+        	
+        	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
+        	newPathInfo = StringUtils.substringBefore(newPathInfo, "update")+"10250/0/12"; 
+        	//((Request) req).setPathInfo(newPathInfo);
+        	updatePriorityOwnership(resp,path[1],newPathInfo);
+        	       	
+        }
+        
         resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         resp.getWriter().format("Invalid operation").flush();
     }
