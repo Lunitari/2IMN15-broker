@@ -18,6 +18,7 @@ import org.json.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
@@ -75,20 +76,20 @@ public class BrokerServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
+    public final static String obervables = "/10250/0/2;/10250/0/3;/10250/0/4;/10350/0/2;/10350/0/3";
+    public final static String locationInfo = "/10250/0/8;/10250/0/9;;/10350/0/5;/10350/0/6";
+    public static HashMap<String, HashMap<String, Object>> devices;
+
     private final LwM2mServer server;
     private final ClientServlet clients;
     private final Gson gson;
 
     //private static User[] users;
     private static ArrayList<User> usersList;
-    private static int loggedInUserID;
-    private static String[] lights;
-    private static String[] sensors;
 
     public BrokerServlet(ClientServlet clients, LwM2mServer server, int securePort) {
         this.server = server;
         this.clients = clients;
-        loggedInUserID = -1;
         GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeHierarchyAdapter(Registration.class, new RegistrationSerializer(securePort));
         gsonBuilder.registerTypeHierarchyAdapter(LwM2mResponse.class, new ResponseSerializer());
@@ -96,6 +97,7 @@ public class BrokerServlet extends HttpServlet {
         gsonBuilder.registerTypeHierarchyAdapter(LwM2mNode.class, new LwM2mNodeDeserializer());
         gsonBuilder.setDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
         this.gson = gsonBuilder.create();
+        devices= new HashMap<>();
 
         
     //     users = new User[2];
@@ -103,14 +105,12 @@ public class BrokerServlet extends HttpServlet {
     //     users[1] = new User("Mark", 22, "Hoek, Mark","m.hoek@tue.nl","54321",false);
     // 
         usersList=new ArrayList<>();
-        User admin=new User("Office-Admin-0", 0, "Room-0","admin","admin@tue.nl","pswd");
+        User admin=new User("Office-Admin-0", 0, "Room-21","admin","admin@tue.nl","pswd");
         admin.updatePresenceUser(true);
+//        execute the code below when receiving the OWNERSHIPPRIORITY.JSON
+//        admin.setLocation(2, 2);
+//        double dist = admin.getDistanceFromLocation(1, 5);
         usersList.add(admin);
-
-    }
-    
-    public static String getUserID() {
-    	return usersList.get(loggedInUserID).UserID;
     }
     
     public JSONArray findClientType(String type) {
@@ -191,13 +191,6 @@ public class BrokerServlet extends HttpServlet {
             return;
         }
         
-        if ((typeRequest.equals("lights") || typeRequest.equals("sensors")) && path.length > 2) {
-        	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
-        	((Request) req).setPathInfo(newPathInfo);
-        	clients.doGet(req, resp);
-        	return;
-        }
-        
         // test for modifying requests.
         if(typeRequest.equals("update")) {
         	updatePriorityOwnership(resp, path[1], "/api/broker/"+path[1]+"/test.json");
@@ -207,6 +200,13 @@ public class BrokerServlet extends HttpServlet {
         
         	
 
+        // forward request to the device
+        if ((typeRequest.equals("lights") || typeRequest.equals("sensors")) && path.length > 2) {
+        	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
+        	((Request) req).setPathInfo(newPathInfo);
+        	clients.doGet(req, resp);
+        	return;
+        }
 
 	    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 	    resp.getWriter().append("Operation not allowed").flush();
@@ -215,22 +215,28 @@ public class BrokerServlet extends HttpServlet {
     /**
      * {@inheritDoc}
      */
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
     	String[] path = StringUtils.split(req.getPathInfo(), '/');
         String typeRequest = path[0];
         
-    	if ((typeRequest.equals("lights") || typeRequest.equals("sensors")) && path.length > 2) {
-        	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
-        	((Request) req).setPathInfo(newPathInfo);
-        	clients.doDelete(req, resp);
-        	return;
-        }
     	
     	if(typeRequest.equals("update")) {
         	updatePriorityOwnership(resp, path[1], "/api/broker/"+path[1]+"/OwnershipPriority.json");
             return;
         }
+    	
+    	// forward request to the device
+    	if ((typeRequest.equals("lights") || typeRequest.equals("sensors")) && path.length > 2) {
+        	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
+        	((Request) req).setPathInfo(newPathInfo);
+        	clients.doPut(req, resp);
+        	return;
+        }
+
+	    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+	    resp.getWriter().append("Operation not allowed").flush();
     }
 
     /**
@@ -243,6 +249,15 @@ public class BrokerServlet extends HttpServlet {
         String typeRequest = path[0];
 
         if (typeRequest.equals("users")) {
+        	
+        	if(path.length == 1) {
+        		this.setUsers(req.getReader().lines().collect(Collectors.joining(System.lineSeparator())));
+        		resp.setContentType("text/plain");
+                String response = "{\"status\":\"SUCCESSFUL\"}";
+                resp.getOutputStream().write(response.getBytes("UTF-8"));
+                resp.setStatus(HttpServletResponse.SC_OK);
+                return;
+        	}
 
         	// Specific Users (Login/update sensor status)
         	if (path.length > 1) {
@@ -259,7 +274,6 @@ public class BrokerServlet extends HttpServlet {
         		                    String response = "correctLogin";
         		                    resp.getOutputStream().write(response.getBytes("UTF-8"));
         		                    resp.setStatus(HttpServletResponse.SC_OK);
-        		                    loggedInUserID = i;
         		                    return;
         		        		}
         		        		else if (correctLogin == 2){
@@ -293,13 +307,17 @@ public class BrokerServlet extends HttpServlet {
 
         	}
         }
-
-
-        else if (typeRequest.equals("usersList")) {
-            this.setUsers(req.getReader().lines().collect(Collectors.joining(System.lineSeparator())));
-        }
-        resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        resp.getWriter().format("Invalid operation").flush();
+        
+		// forward request to the device
+		if ((typeRequest.equals("lights") || typeRequest.equals("sensors")) && path.length > 2) {
+			String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
+			((Request) req).setPathInfo(newPathInfo);
+			clients.doPost(req, resp);
+			return;
+		}
+    	
+	    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+	    resp.getWriter().append("Operation not allowed").flush();
     }
 
     @Override
@@ -307,8 +325,17 @@ public class BrokerServlet extends HttpServlet {
     	String[] path = StringUtils.split(req.getPathInfo(), '/');
         String typeRequest = path[0];
         
+        
+        
+        // forward request to the device
     	if ((typeRequest.equals("lights") || typeRequest.equals("sensors")) && path.length > 2) {
         	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
+        	
+        	// block observe delete requests
+            if ("observe".equals(path[path.length - 1]) && obervables.contains(StringUtils.substringBetween(req.getPathInfo(), path[1], "/"+path[path.length - 1]))) {
+            	resp.setStatus(HttpServletResponse.SC_OK);
+            	return;
+            }
         	((Request) req).setPathInfo(newPathInfo);
         	clients.doDelete(req, resp);
         	return;

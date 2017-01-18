@@ -16,6 +16,12 @@ public class User {
 	public String Email;
 	private String Password;
 	private boolean AtDesk;
+	private int locationX;
+	private int locationY;
+
+	private String LightUSER1;
+	private String LightUSER2;
+	private String Sensor;
 	
 	public User(String userID, int groupNo, String roomId, String name, String email, String password) {
         UserID = userID;
@@ -26,6 +32,38 @@ public class User {
         Password = password;
 //      AtDesk = atDesk;      
     }
+	
+	public void setLocation(int X, int Y) {
+		locationX = X;
+		locationY = Y;
+	}
+
+	public void setSensor(String sensor) {
+		this.Sensor = sensor;
+	}
+	public void setLightUSER1(String light) {
+		this.LightUSER1 = light;
+	}
+	public void setLightUSER2(String light) {
+		this.LightUSER2 = light;
+	}
+	public String getSensor() {
+		return Sensor;
+	}
+	
+	public String getLightUSER1() {
+		return LightUSER1;
+	}
+	public String getLightUSER2() {
+		return LightUSER2;
+	}
+	
+	
+	public double getDistanceFromLocation(int X, int Y) {
+		//sqrt((x2-x1)^2 + (y2-y1)^2)
+		double distance = Math.sqrt(Math.pow(X - locationX, 2) + Math.pow(Y - locationY, 2));		
+		return distance;
+	}
 	
 	public void updatePresenceUser(boolean atDesk){
 		AtDesk = atDesk;
