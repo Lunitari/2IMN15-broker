@@ -41,7 +41,7 @@ public class AvailableLightDiscovery {
     
     public static HashMap<String, HashMap<String, Object>> devices;
     
-    private BrokerServlet broker;
+    private static BrokerServlet broker;
     
 	private final LwM2mServer server;
 	
@@ -117,9 +117,9 @@ public class AvailableLightDiscovery {
 	            if (registration != null) {
 	            	String path = observation.getPath().toString();
 	            	String value = StringUtils.substringBetween(response.getContent().toString(), "value=", ",");
-	            	HashMap<String, Object> resources =  devices.containsKey(observation.getRegistrationId()) ? devices.get(observation.getRegistrationId()) : new HashMap<String, Object>();
+	            	HashMap<String, Object> resources =  devices.containsKey(registration.getEndpoint()) ? devices.get(registration.getEndpoint()) : new HashMap<String, Object>();
 	            	resources.put(path, value);
-	            	devices.put(observation.getRegistrationId(), resources);
+	            	devices.put(registration.getEndpoint(), resources);
 	            }
 			}
 			
@@ -159,19 +159,22 @@ public class AvailableLightDiscovery {
 	
 	public static  Boolean userAtDesk(String userID) {
 		if(userID.equals("Office-Admin-0")) return true;
-		User user = new User("Office-Admin-0", 0, "Room-21","admin","admin@tue.nl","pswd");
+		User user = broker.usersMap.get(userID);
+		
+		//test code
 		user.setSensor("Sensor-Device-19-1");
 		
 		//check if required resources are known
 		if(!devices.containsKey(user.getSensor())) return false;
 		if(!devices.get(user.getSensor()).containsKey(SENSOR_STATE)) return false;
-		
-		return devices.get(user.getSensor()).get(SENSOR_STATE).equals("OCCUPIED");
+
+//		return devices.get(user.getSensor()).get(SENSOR_STATE).equals("OCCUPIED");
+		return devices.get(user.getSensor()).get(SENSOR_STATE).equals("USED");
 	}
 	
 	public Boolean isUserCloserToLight(String userID, String userID2, String endpoint) {
-		User user = new User("Office-Admin-0", 0, "Room-21","admin","admin@tue.nl","pswd");
-		User user2 = new User("Office-Admin-1", 0, "Room-21","admin","admin@tue.nl","pswd1");
+		User user = broker.usersMap.get(userID);
+		User user2 = broker.usersMap.get(userID2);
 		
 		//check if required resources are known
 		if(!devices.containsKey(endpoint)) return false;
@@ -185,14 +188,13 @@ public class AvailableLightDiscovery {
 	}
 	
 	public Boolean isAvailabletoUser(String endpoint, String userID) {
-		User user = new User("Office-Admin-0", 0, "Room-21","admin","admin@tue.nl","pswd");
+		User user = broker.usersMap.get(userID);
 		// User is USER1 of this light
 		if (user.getLightUSER1().equals(endpoint)) return true;
 		
 		//check if required resources are known
 		if(!devices.containsKey(endpoint)) return false;
 		if(!devices.get(endpoint).containsKey(LIGHT_STATE)) return false;
-		if(!devices.get(endpoint).containsKey(LIGHT_USER_ID)) return false;
 		if(!devices.get(endpoint).containsKey(LIGHT_USER_TYPE)) return false;
 		
 		
@@ -201,6 +203,8 @@ public class AvailableLightDiscovery {
 				   (devices.get(endpoint).get(LIGHT_STATE).equals("USED") && devices.get(endpoint).get(LIGHT_USER_TYPE).equals("USER3"))))
 					return true;
 		
+		//check if required resources are known
+		if(!devices.get(endpoint).containsKey(LIGHT_USER_ID)) return false;
 		// User is USER3
 		if(devices.get(endpoint).get(LIGHT_STATE).equals("FREE") ||
 		  (devices.get(endpoint).get(LIGHT_STATE).equals("USED") && devices.get(endpoint).get(LIGHT_USER_TYPE).equals("USER3") &&

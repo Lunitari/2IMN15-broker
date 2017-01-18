@@ -70,11 +70,6 @@ li.navlink>a:focus{
 #security-navlink>a:focus{
 		color: #b11eb2;
 }
-#light-navlink.active>a,
-#light-navlink>a:hover,
-#light-navlink>a:focus{
-		color: #b11eff;
-}
 
 .navbar-default .navbar-nav>li>a {
 	line-height: 35px;
