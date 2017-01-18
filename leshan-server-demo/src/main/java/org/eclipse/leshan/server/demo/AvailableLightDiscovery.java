@@ -117,7 +117,9 @@ public class AvailableLightDiscovery {
 	            if (registration != null) {
 	            	String path = observation.getPath().toString();
 	            	String value = StringUtils.substringBetween(response.getContent().toString(), "value=", ",");
-	            	devices.get(observation.getRegistrationId()).put(path, value);
+	            	HashMap<String, Object> resources =  devices.containsKey(observation.getRegistrationId()) ? devices.get(observation.getRegistrationId()) : new HashMap<String, Object>();
+	            	resources.put(path, value);
+	            	devices.put(observation.getRegistrationId(), resources);
 	            }
 			}
 			

@@ -34,7 +34,8 @@ lwClientControllers.controller('ClientListCtrl', [
     '$scope',
     '$http',
     '$location',
-    function ClientListCtrl($scope, $http,$location) {
+    '$rootScope',
+    function ClientListCtrl($scope,$http,$location,$rootScope) {
 
         // update navbar
         angular.element("#navbar").children().removeClass('active');
