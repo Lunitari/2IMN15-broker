@@ -189,10 +189,16 @@ public class BrokerServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_OK);
             return;
         }
-
-
-
-
+         
+        else if (typeRequest.equals("lights") && path[2].equals("user_type")){
+        	 
+             resp.setContentType("text/plain");
+             String response = usersMap.get(path[3]).checkUserType(path[1]);
+             resp.getOutputStream().write(response.getBytes("UTF-8"));
+             resp.setStatus(HttpServletResponse.SC_OK);
+        	return;
+        }
+        
         // forward request to the device
         if ((typeRequest.equals("lights") || typeRequest.equals("sensors")) && path.length > 2) {
         	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
@@ -252,7 +258,8 @@ public class BrokerServlet extends HttpServlet {
             	String userID = path[1];
                 String input = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
 	        	if(usersMap.containsKey(userID)) {
-                    Boolean atDesk = AvailableLightDiscovery.userAtDesk(userID);
+//                    Boolean atDesk = AvailableLightDiscovery.userAtDesk(userID);
+	        		  Boolean atDesk = true;
 	        		Boolean correctLogin = usersMap.get(userID).checkPassword(input);
 	        		if (correctLogin && atDesk){
 	                    resp.setContentType("text/plain");

@@ -62,4 +62,16 @@ public class User {
 	public Boolean checkPassword(String password){
 		return password.equals(Password);
 	}
+	
+	public String checkUserType(String lightID) {
+		if (lightID.equals(getLightUSER1())) {
+			
+			return "USER1";
+		} 
+		else if (lightID.equals(getLightUSER2())) {
+		
+			return "USER2";
+		}
+		return "USER3";
+	}
 }
