@@ -73,11 +73,6 @@ import com.google.gson.JsonSyntaxException;
 public class ClientServlet extends HttpServlet {
 
     private static final String FORMAT_PARAM = "format";
-//    private static final String LIGHT_STATE = "/10250/0/2";
-//    private static final String LIGHT_USER_TYPE = "/10250/0/3";
-//    private static final String LIGHT_USER_ID = "/10250/0/4";
-//    private static final String SENSOR_STATE = "/10350/0/2";
-//    private static final String SENSOR_USER_ID = "/10350/0/3";
 
     private static final Logger LOG = LoggerFactory.getLogger(ClientServlet.class);
 
@@ -88,117 +83,11 @@ public class ClientServlet extends HttpServlet {
     private final AvailableLightDiscovery discovery;
 
     private final LwM2mServer server;
-    //TODO replace with the devices hashmap in BrokerServlet
-//    public HashMap<String, HashMap<String, Object>> devices;
 
     private final Gson gson;
-//    private 
-    
-    
-//    RegistrationListener registrationListener = new RegistrationListener() {
-//		
-//		@Override
-//		public void updated(RegistrationUpdate update, Registration updatedRegistration) {}
-//		
-//		@Override
-//		public void unregistered(Registration registration) {
-//			// TODO remove device from lists
-//			
-//		}
-//		
-//		@Override
-//		public void registered(Registration registration) {
-//			// observe the state of the devices for the Available Light Discovery
-//			String endpoint = registration.getEndpoint();
-//			if (endpoint.contains("Light")) {
-//				try {
-//	            	ObserveRequest lightState = new ObserveRequest(ContentFormat.JSON, LIGHT_STATE);
-//	            	ObserveRequest userType = new ObserveRequest(ContentFormat.JSON, LIGHT_USER_TYPE);
-//	            	ObserveRequest userID = new ObserveRequest(ContentFormat.JSON, LIGHT_USER_ID);
-//					ObserveResponse cResponse = server.send(registration, lightState, TIMEOUT);
-//					HashMap<String, Object> resources = (HashMap<String, Object>) (devices.get(endpoint) != null ? devices.get(endpoint) : new HashMap<>());
-//					if(cResponse != null) {
-//						resources.put(LIGHT_STATE, (String) ((LwM2mSingleResource) cResponse.getContent()).getValue());
-//					}
-//					cResponse = server.send(registration, userType, TIMEOUT);
-//					if(cResponse != null) {
-//						resources.put(LIGHT_USER_TYPE, (String) ((LwM2mSingleResource) cResponse.getContent()).getValue());
-//					}
-//					cResponse = server.send(registration, userID, TIMEOUT);
-//					if (cResponse != null) {
-//						resources.put(LIGHT_USER_ID, (String) ((LwM2mSingleResource) cResponse.getContent()).getValue());
-//					}
-//					devices.put(registration.getEndpoint(), resources);
-////	            	Set<Observation> tet = server.getObservationService().getObservations(registration);
-//				} catch (InterruptedException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//			}
-//			if (endpoint.contains("Sensor")) {
-//				try {
-//	            	ObserveRequest sensorState = new ObserveRequest(ContentFormat.JSON, SENSOR_STATE);
-//	            	ObserveRequest userID = new ObserveRequest(ContentFormat.JSON, SENSOR_USER_ID);
-//					ObserveResponse cResponse = server.send(registration, sensorState, TIMEOUT);
-//					if(cResponse != null)cResponse = server.send(registration, userID, TIMEOUT);
-//					if (cResponse == null) {
-//						if(LOG.isDebugEnabled()) {
-//							LOG.debug(String.format("Cannot observe device:%s", endpoint));
-//						}
-//						// add sensor to list	
-//						else {
-//							
-//						}
-//					}
-//	            	//Set<Observation> tet = server.getObservationService().getObservations(registration);
-//				} catch (InterruptedException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//			}
-//		}
-//	};
-//	
-//	ObservationListener observationListener = new ObservationListener() {
-//		
-//		@Override
-//		public void newValue(Observation observation, ObserveResponse response) {
-//			Registration registration = server.getRegistrationService().getById(observation.getRegistrationId());
-//
-//            if (registration != null) {
-//            	String path = observation.getPath().toString();
-//            	String value = StringUtils.substringBetween(response.getContent().toString(), "value=", ",");
-//            	devices.get(observation.getRegistrationId()).put(path, value);
-//            }
-//		}
-//		
-//		@Override
-//		public void newObservation(Observation observation) {}
-//		
-//		@Override
-//		public void cancelled(Observation observation) {
-//			//registration is always null so this option does not work !!
-////			Registration registration = server.getRegistrationService().getByEndpoint(observation.getRegistrationId());
-////			if (registration != null) {
-////				String resource = observation.getPath().toString();
-////				if(BrokerServlet.obervables.contains(observation.getPath().toString())) {
-////					try {
-////						ObserveRequest obsReq = new ObserveRequest(ContentFormat.JSON, resource);
-////						ObserveResponse cResponse = server.send(registration, obsReq, TIMEOUT);
-////					} catch (InterruptedException e) {
-////						// TODO Auto-generated catch block
-////						e.printStackTrace();
-////					}
-////					
-////				}
-////			}
-//		}
-//	};
 
     public ClientServlet(AvailableLightDiscovery discovery, LwM2mServer server, int securePort) {
         this.server = server;
-//        server.getRegistrationService().addListener(this.registrationListener);
-//        server.getObservationService().addListener(this.observationListener);
         GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeHierarchyAdapter(Registration.class, new RegistrationSerializer(securePort));
         gsonBuilder.registerTypeHierarchyAdapter(LwM2mResponse.class, new ResponseSerializer());
@@ -233,19 +122,7 @@ public class ClientServlet extends HttpServlet {
 	            		String contentFormatParam = "JSON";
 	                    ContentFormat contentFormat = contentFormatParam != null
 	                            ? ContentFormat.fromName(contentFormatParam.toUpperCase()) : null;
-                    	
-                        
-                        // create & process request TODO remove and read from lights list
-//	                    ReadRequest request = new ReadRequest(contentFormat, LIGHT_STATUS);
-//	                    ReadResponse cResponse = null;
-//	                    try {
-//							cResponse = server.send(registration, request, TIMEOUT);
-//						} catch (InterruptedException e) {
-//							// TODO Auto-generated catch block
-//							e.printStackTrace();
-//						}
-//	                    String lightState = StringUtils.substringBetween(cResponse.getContent().toString(),"value=",", type");
-//	                    // TODO: properly filter lights based on user
+
 	                    if(!user.equals("Office-Admin-0") && !discovery.isAvailabletoUser(c.getString("endpoint"),user)) {
 	                    	clients.remove(i);
 	                    }
