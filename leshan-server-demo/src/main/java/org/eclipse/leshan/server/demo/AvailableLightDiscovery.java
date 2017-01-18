@@ -161,15 +161,12 @@ public class AvailableLightDiscovery {
 		if(userID.equals("Office-Admin-0")) return true;
 		User user = broker.usersMap.get(userID);
 		
-		//test code
-		user.setSensor("Sensor-Device-19-1");
-		
 		//check if required resources are known
 		if(!devices.containsKey(user.getSensor())) return false;
 		if(!devices.get(user.getSensor()).containsKey(SENSOR_STATE)) return false;
 
-//		return devices.get(user.getSensor()).get(SENSOR_STATE).equals("OCCUPIED");
-		return devices.get(user.getSensor()).get(SENSOR_STATE).equals("USED");
+		return devices.get(user.getSensor()).get(SENSOR_STATE).equals("OCCUPIED");
+//		return devices.get(user.getSensor()).get(SENSOR_STATE).equals("USED");
 	}
 	
 	public Boolean isUserCloserToLight(String userID, String userID2, String endpoint) {

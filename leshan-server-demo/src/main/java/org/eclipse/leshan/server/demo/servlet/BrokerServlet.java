@@ -283,8 +283,7 @@ public class BrokerServlet extends HttpServlet {
             	String userID = path[1];
                 String input = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
 	        	if(usersMap.containsKey(userID)) {
-//                    Boolean atDesk = AvailableLightDiscovery.userAtDesk(userID);
-	        		  Boolean atDesk = true;
+	        		Boolean atDesk = AvailableLightDiscovery.userAtDesk(userID);  
 	        		Boolean correctLogin = usersMap.get(userID).checkPassword(input);
 	        		if (correctLogin && atDesk){
 	                    resp.setContentType("text/plain");
