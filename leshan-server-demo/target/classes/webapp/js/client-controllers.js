@@ -75,7 +75,7 @@ lwClientControllers.controller('ClientListCtrl', [
         };
 
         // get the list of connected clients(lights)
-        $http.get('api/clients/lights'). error(function(data, status, headers, config){
+        $http.get('api/clients/lights/'+$rootScope.user). error(function(data, status, headers, config){
             $scope.error = "Unable get client list: " + status + " " + data;
             console.error($scope.error);
         }).success(function(data, status, headers, config) {
