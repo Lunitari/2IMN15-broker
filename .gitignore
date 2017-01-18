@@ -8,6 +8,7 @@ Desktop.ini
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
 **/target/
+**\target\
 
 # Windows Installer files
 *.cab
@@ -47,3 +48,4 @@ Network Trash Folder
 Temporary Items
 .apdisk
 leshan-server-demo.rar
+*.class

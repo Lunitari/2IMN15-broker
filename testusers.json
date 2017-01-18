@@ -1,0 +1,26 @@
+[
+    {
+        "UserID": "Office-Worker-21",
+        "GroupNo":21,
+        "RoomID":"Room-21",
+        "Name":"Peter",
+        "Email":"p@tue.nl",
+        "Password":"12345",
+    },
+    {
+        "UserID": "Office-Worker-19",
+        "GroupNo":19,
+        "RoomID":"Room-21",
+        "Name":"Mark",
+        "Email":"m@tue.nl",
+        "Password":"54321"
+    },
+    {
+        "UserID": "Office-Worker-18",
+        "GroupNo":18,
+        "RoomID":"Room-21",
+        "Name":"Lin",
+        "Email":"l@tue.nl",
+        "Password":"54321"
+    }
+]
