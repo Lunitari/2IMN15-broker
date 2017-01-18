@@ -16,8 +16,11 @@
 package org.eclipse.leshan.server.demo.servlet;
 import org.json.*;
 
+import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.Inet4Address;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -28,6 +31,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.leshan.core.node.LwM2mNode;
@@ -51,6 +55,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 
+
+
 /**
  * Service HTTP REST API calls.
  */
@@ -63,7 +69,7 @@ public class BrokerServlet extends HttpServlet {
     private static final long TIMEOUT = 5000; // ms
 
     private static final long serialVersionUID = 1L;
-    private final String FILEPATH = "/home/pi/lightdevices/";
+    private final String FILEPATH = "/home/lorin-andrei/pi/lightdevices/";
 
 
     private final LwM2mServer server;
@@ -194,13 +200,26 @@ public class BrokerServlet extends HttpServlet {
             return;
         }
          
-        else if (typeRequest.equals("lights") && path[2].equals("user_type")){
+        if (typeRequest.equals("lights") && path[2].equals("user_type")){
         	 
              resp.setContentType("text/plain");
              String response = usersMap.get(path[3]).checkUserType(path[1]);
              resp.getOutputStream().write(response.getBytes("UTF-8"));
              resp.setStatus(HttpServletResponse.SC_OK);
         	return;
+        }
+        
+        if (typeRequest.equals("lights") && path[2].equals("updateOwnershipPriority")) {
+        	
+        	try {
+        		String content = FileUtils.readFileToString(new File(FILEPATH+path[1]+"/OwnershipPriority.json"));
+        		resp.setContentType("application/json");
+                resp.getOutputStream().write(content.getBytes("UTF-8"));
+                resp.setStatus(HttpServletResponse.SC_OK);
+        	} catch (IOException e) {
+         	   // do something
+         	}     	
+            return;
         }
         
         // forward request to the device
@@ -210,6 +229,8 @@ public class BrokerServlet extends HttpServlet {
         	clients.doGet(req, resp);
         	return;
         }
+        
+        
 
 	    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 	    resp.getWriter().append("Operation not allowed").flush();
@@ -295,21 +316,21 @@ public class BrokerServlet extends HttpServlet {
 
         	String dataUpdate = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
         	setUserOwnership(path[1], dataUpdate);
-        	String pathJSON = "/home/pi/lightdevices/"+path[1]+"OwnershipPriority.json";
+        	String pathJSON = FILEPATH+path[1]+"/OwnershipPriority.json";
         	try {
-
-//        		FileWriter file = new FileWriter(pathJSON);
-//        		file.write(dataUpdate);
-//        		file.close();
-
-
-            	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
-            	newPathInfo = StringUtils.substringBefore(newPathInfo, "update")+"10250/0/12";
-            	updatePriorityOwnership(resp,path[1],pathJSON);
+        		
+        		File file = new File(pathJSON); 
+        		file.getParentFile().mkdirs();
+        		FileWriter fileWr = new FileWriter(file);
+        		fileWr.write(dataUpdate);
+        		fileWr.close();
+        		updatePriorityOwnership(resp,path[1],Inet4Address.getLocalHost().toString()+":8080/api/broker/lights/"+path[1]+"/updateOwnershipPriority");
             	return;
+        		
         	} catch (IOException e) {
         	   // do something
         	}
+        	
         	resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
     	    resp.getWriter().append("JSON not valid").flush();
         	return;
