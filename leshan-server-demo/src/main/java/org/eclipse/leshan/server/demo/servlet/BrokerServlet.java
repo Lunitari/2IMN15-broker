@@ -318,7 +318,7 @@ public class BrokerServlet extends HttpServlet {
         	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
         	newPathInfo = StringUtils.substringBefore(newPathInfo, "update")+"10250/0/12"; 
         	//((Request) req).setPathInfo(newPathInfo);
-        	updatePriorityOwnership(resp,path[1],newPathInfo);
+        	updatePriorityOwnership(resp,newPathInfo,pathJSON);
         	       	
         }
         
