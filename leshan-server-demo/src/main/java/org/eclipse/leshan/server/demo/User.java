@@ -1,21 +1,13 @@
 package org.eclipse.leshan.server.demo;
 
 public class User {
-//	public String UserID;
-//	public int GroupNr;
-//	public String Username;
-//	public String Email;
-//	private String Password;
-//	private boolean AtDesk;
 	
 	public String UserID;
 	public int GroupNo;
 	public String RoomId;
 	public String Name;
-//	private String Email;
 	public String Email;
 	private String Password;
-	private boolean AtDesk;
 	private int locationX;
 	private int locationY;
 
@@ -30,7 +22,9 @@ public class User {
         Name = name;
         Email = email;
         Password = password;
-//      AtDesk = atDesk;      
+        LightUSER1 = "";
+        LightUSER2 = "";
+        Sensor = "";
     }
 	
 	public void setLocation(int X, int Y) {
@@ -65,11 +59,7 @@ public class User {
 		return distance;
 	}
 	
-	public void updatePresenceUser(boolean atDesk){
-		AtDesk = atDesk;
-	}
-	
-	public int checkLogin(String password){
-		return password.equals(Password) ? AtDesk ? 1 : 2 : 0;
+	public Boolean checkPassword(String password){
+		return password.equals(Password);
 	}
 }

@@ -20,7 +20,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
@@ -28,32 +27,18 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.leshan.core.node.LwM2mNode;
-import org.eclipse.leshan.core.node.LwM2mObjectInstance;
-import org.eclipse.leshan.core.node.LwM2mSingleResource;
 import org.eclipse.leshan.core.request.ContentFormat;
-import org.eclipse.leshan.core.request.CreateRequest;
-import org.eclipse.leshan.core.request.DeleteRequest;
-import org.eclipse.leshan.core.request.ExecuteRequest;
-import org.eclipse.leshan.core.request.ObserveRequest;
-import org.eclipse.leshan.core.request.ReadRequest;
 import org.eclipse.leshan.core.request.WriteRequest;
 import org.eclipse.leshan.core.request.WriteRequest.Mode;
-import org.eclipse.leshan.core.request.exception.RequestFailedException;
-import org.eclipse.leshan.core.request.exception.ResourceAccessException;
-import org.eclipse.leshan.core.response.CreateResponse;
-import org.eclipse.leshan.core.response.DeleteResponse;
-import org.eclipse.leshan.core.response.ExecuteResponse;
 import org.eclipse.leshan.core.response.LwM2mResponse;
-import org.eclipse.leshan.core.response.ObserveResponse;
-import org.eclipse.leshan.core.response.ReadResponse;
 import org.eclipse.leshan.core.response.WriteResponse;
 import org.eclipse.leshan.server.LwM2mServer;
 import org.eclipse.leshan.server.client.Registration;
 import org.eclipse.leshan.server.demo.servlet.json.RegistrationSerializer;
+import org.eclipse.leshan.server.demo.AvailableLightDiscovery;
 import org.eclipse.leshan.server.demo.User;
 import org.eclipse.leshan.server.demo.servlet.json.LwM2mNodeDeserializer;
 import org.eclipse.leshan.server.demo.servlet.json.LwM2mNodeSerializer;
@@ -77,10 +62,8 @@ public class BrokerServlet extends HttpServlet {
     private static final long TIMEOUT = 5000; // ms
 
     private static final long serialVersionUID = 1L;
+    private final String FILEPATH = "/home/pi/lightdevices/";
 
-    public final static String obervables = "/10250/0/2;/10250/0/3;/10250/0/4;/10350/0/2;/10350/0/3";
-    public final static String locationInfo = "/10250/0/8;/10250/0/9;;/10350/0/5;/10350/0/6";
-    public static HashMap<String, HashMap<String, Object>> devices;
 
     private final LwM2mServer server;
     private final ClientServlet clients;
@@ -99,11 +82,10 @@ public class BrokerServlet extends HttpServlet {
         gsonBuilder.registerTypeHierarchyAdapter(LwM2mNode.class, new LwM2mNodeDeserializer());
         gsonBuilder.setDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
         this.gson = gsonBuilder.create();
-        devices= new HashMap<>();
 
         usersList=new ArrayList<>();
         User admin=new User("Office-Admin-0", 0, "Room-21","admin","admin@tue.nl","pswd");
-        admin.updatePresenceUser(true);
+
 //        execute the code below when receiving the OWNERSHIPPRIORITY.JSON
 //        admin.setLocation(2, 2);
 //        double dist = admin.getDistanceFromLocation(1, 5);
@@ -136,6 +118,8 @@ public class BrokerServlet extends HttpServlet {
             JSONObject c = j.getJSONObject(i);
                 usersList.add(new User(c.getString("UserID"),c.getInt("GroupNo"),c.getString("RoomID"),
                                   c.getString("Name"),c.getString("Email"),c.getString("Password")));
+                //test
+                usersList.get(i).setSensor("Sensor-Device-19-1");
         }
         return;
     }
@@ -188,12 +172,6 @@ public class BrokerServlet extends HttpServlet {
             return;
         }
 
-        // test for modifying requests.
-        if(typeRequest.equals("update")) {
-        	updatePriorityOwnership(resp, path[1], "/api/broker/"+path[1]+"/test.json");
-            return;
-        }
-
 
 
 
@@ -231,7 +209,9 @@ public class BrokerServlet extends HttpServlet {
     }
 
     /**
-     * TODO: remove the changing of the presence of the user -> acquire from the sensor/broker storage.
+     * TODO: BEFORE PUSHING REVERT COMMENT updatePresence
+     * 
+     * remove the changing of the presence of the user -> acquire from the sensor/broker storage.
      * Used for logging into the client side and changing the presence of the user.
      */
     @Override
@@ -243,7 +223,7 @@ public class BrokerServlet extends HttpServlet {
 
         	if(path.length == 1) {
         		this.setUsers(req.getReader().lines().collect(Collectors.joining(System.lineSeparator())));
-        		resp.setContentType("text/plain");
+        		resp.setContentType("application/json");
                 String response = "{\"status\":\"SUCCESSFUL\"}";
                 resp.getOutputStream().write(response.getBytes("UTF-8"));
                 resp.setStatus(HttpServletResponse.SC_OK);
@@ -258,15 +238,16 @@ public class BrokerServlet extends HttpServlet {
         	        if (input[0].equals("login")){
         		        for(int i = 0; i < usersList.size(); i++){
         		        	if(usersList.get(i).UserID.toLowerCase().equals(userID.toLowerCase())){
-        		        		int correctLogin = usersList.get(i).checkLogin(input[1]);
-        		        		if (correctLogin == 1){
+        		        		Boolean atDesk = AvailableLightDiscovery.userAtDesk(userID);
+        		        		Boolean correctLogin = usersList.get(i).checkPassword(input[1]);
+        		        		if (correctLogin && atDesk){
         		                    resp.setContentType("text/plain");
         		                    String response = "correctLogin";
         		                    resp.getOutputStream().write(response.getBytes("UTF-8"));
         		                    resp.setStatus(HttpServletResponse.SC_OK);
         		                    return;
         		        		}
-        		        		else if (correctLogin == 2){
+        		        		else if (correctLogin && !atDesk){
         		        			resp.setContentType("text/plain");
         		                    String response = "notAtDesk";
         		                    resp.getOutputStream().write(response.getBytes("UTF-8"));
@@ -284,7 +265,7 @@ public class BrokerServlet extends HttpServlet {
         	        else if (input[0].equals("status")){
         	        	for (int i = 0; i < usersList.size(); i++) {
         	        		if (usersList.get(i).UserID.equals(userID)){
-        	        			usersList.get(i).updatePresenceUser(Boolean.parseBoolean(input[1]));
+//        	        			usersList.get(i).updatePresenceUser(Boolean.parseBoolean(input[1]));
         	        			resp.setStatus(HttpServletResponse.SC_ACCEPTED);
         	        	        resp.getWriter().format("Status changed").flush();
         	        	        return;
@@ -297,8 +278,7 @@ public class BrokerServlet extends HttpServlet {
 
         	}
         }
-
-        if (typeRequest.equals("ligths") && path.length > 2 && path[2].equals("update") ) {
+        if (typeRequest.equals("lights") && path.length > 2 && path[2].equals("update") ) {
 
         	String dataUpdate = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
         	String pathJSON = "/home/pi/lightdevices/"+path[1]+"OwnershipPriority.json";
@@ -307,14 +287,18 @@ public class BrokerServlet extends HttpServlet {
         		FileWriter file = new FileWriter(pathJSON);
         		file.write(dataUpdate);
         		file.close();
+        		
+
+            	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
+            	newPathInfo = StringUtils.substringBefore(newPathInfo, "update")+"10250/0/12";
+            	//((Request) req).setPathInfo(newPathInfo);
+            	updatePriorityOwnership(resp,newPathInfo,pathJSON);
         	} catch (IOException e) {
         	   // do something
         	}
-
-        	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
-        	newPathInfo = StringUtils.substringBefore(newPathInfo, "update")+"10250/0/12";
-        	//((Request) req).setPathInfo(newPathInfo);
-        	updatePriorityOwnership(resp,newPathInfo,pathJSON);
+        	resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+    	    resp.getWriter().append("JSON not valid").flush();
+        	return;
 
         }
 
@@ -335,17 +319,9 @@ public class BrokerServlet extends HttpServlet {
     	String[] path = StringUtils.split(req.getPathInfo(), '/');
         String typeRequest = path[0];
 
-
-
         // forward request to the device
     	if ((typeRequest.equals("lights") || typeRequest.equals("sensors")) && path.length > 2) {
         	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
-
-        	// block observe delete requests
-            if ("observe".equals(path[path.length - 1]) && obervables.contains(StringUtils.substringBetween(req.getPathInfo(), path[1], "/"+path[path.length - 1]))) {
-            	resp.setStatus(HttpServletResponse.SC_OK);
-            	return;
-            }
         	((Request) req).setPathInfo(newPathInfo);
         	clients.doDelete(req, resp);
         	return;

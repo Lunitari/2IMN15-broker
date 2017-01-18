@@ -64,9 +64,9 @@ public class LeshanServerBuilder {
 
     public LeshanServerBuilder setLocalAddress(String hostname, int port) {
         if (hostname == null) {
-            this.localAddress = new InetSocketAddress(port);
+            this.localAddress = new Inet6Address(port);
         } else {
-            this.localAddress = new InetSocketAddress(hostname, port);
+            this.localAddress = new Inet6Address(hostname, port);
         }
         return this;
     }

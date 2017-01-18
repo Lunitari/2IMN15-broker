@@ -71,6 +71,7 @@ public class LeshanServerDemo {
 
     private final static String USAGE = "java -jar leshan-server-demo.jar [OPTION]";
     private final static String FOOTER = "All options could be passed using environment variables.(using long option name in uppercase)";
+    private static AvailableLightDiscovery discovery;
 
     public static void main(String[] args) {
         // Define options for command line tools
@@ -246,9 +247,11 @@ public class LeshanServerDemo {
         EventServlet eventServlet = new EventServlet(lwServer, lwServer.getSecureAddress().getPort());
         ServletHolder eventServletHolder = new ServletHolder(eventServlet);
         root.addServlet(eventServletHolder, "/event/*");
-
+        
+        discovery = new AvailableLightDiscovery(lwServer);
+        
         ServletHolder clientServletHolder = new ServletHolder(
-                new ClientServlet(lwServer, lwServer.getSecureAddress().getPort()));
+                new ClientServlet(discovery, lwServer, lwServer.getSecureAddress().getPort()));
         root.addServlet(clientServletHolder, "/api/clients/*");
 
         ServletHolder securityServletHolder = new ServletHolder(
@@ -261,6 +264,7 @@ public class LeshanServerDemo {
         ServletHolder brokerServletHolder = new ServletHolder(
                 new BrokerServlet((ClientServlet) clientServletHolder.getServlet(), lwServer, lwServer.getSecureAddress().getPort()));
         root.addServlet(brokerServletHolder, "/api/broker/*");
+        discovery.setBroker((BrokerServlet) brokerServletHolder.getServlet());
 
         // Start Jetty & Leshan
         lwServer.start();
