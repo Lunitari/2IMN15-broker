@@ -221,6 +221,7 @@ public class ClientServlet extends HttpServlet {
             Collection<Registration> registrations = server.getRegistrationService().getAllRegistrations();
             String json = this.gson.toJson(registrations.toArray(new Registration[] {}));
             if (pathInfo.contains("/lights")) {
+            	String user = StringUtils.substringAfter(pathInfo, "/lights/");
 	            JSONArray clients = new JSONArray(json);
 	            for(int i = clients.length()-1; i >= 0; i--) {
 	            	JSONObject c = clients.getJSONObject(i);
@@ -245,9 +246,9 @@ public class ClientServlet extends HttpServlet {
 //						}
 //	                    String lightState = StringUtils.substringBetween(cResponse.getContent().toString(),"value=",", type");
 //	                    // TODO: properly filter lights based on user
-//	                    if(!discovery.isAvailabletoUser(c.getString("endpoint"), StringUtils.substringAfter(pathInfo, "/lights/"))) {
-//	                    	clients.remove(i);
-//	                    }
+	                    if(!user.equals("Office-Admin-0") && !discovery.isAvailabletoUser(c.getString("endpoint"),user)) {
+	                    	clients.remove(i);
+	                    }
 	            		
 	            	}
 	            }

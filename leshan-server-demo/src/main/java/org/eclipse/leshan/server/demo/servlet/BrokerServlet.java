@@ -71,7 +71,7 @@ public class BrokerServlet extends HttpServlet {
     private final Gson gson;
 
 //    private static ArrayList<User> usersList;
-    private static HashMap<String, User> usersMap;
+    public static HashMap<String, User> usersMap;
 
     public BrokerServlet(ClientServlet clients, LwM2mServer server, int securePort) {
         this.server = server;
@@ -129,13 +129,17 @@ public class BrokerServlet extends HttpServlet {
     	JSONArray j = new JSONArray(usersOwnership);
     	for(int i = 0; i < j.length(); i++) {
             JSONObject c = j.getJSONObject(i);
-            if (c.get("user_id").equals("USER1")) {
-            	usersMap.get("user_id").setLightUSER1(lightID);
-            	usersMap.get("user_id").setLocation(c.getDouble("user_location_x"), c.getDouble("user_location_y"));
-            	usersMap.get("user_id").setSensor(c.getString("sensor_id"));
-            }
-            else if (c.get("user_id").equals("USER2")) {
-            	usersMap.get("user_id").setLightUSER2(lightID);
+            if (c.get("user_id") != null && c.get("user_type") != null && c.get("user_location_x") != null) {
+	        	User user = usersMap.get(c.get("user_id"));
+	            if (c.get("user_type").equals("USER1")) {
+	            	user.setLightUSER1(lightID);
+	            	user.setLocation(c.getDouble("user_location_x"), c.getDouble("user_location_y"));
+	            	user.setSensor(c.getString("sensor_id"));
+	            }
+	            else if (c.get("user_type").equals("USER2")) {
+	            	user.setLightUSER2(lightID);
+	            }
+	            user.setLocation(c.getDouble("user_location_x"), c.getDouble("user_location_y"));
             }
     	}
 
@@ -148,7 +152,7 @@ public class BrokerServlet extends HttpServlet {
     	LwM2mNode node;
         try {
             node = gson.fromJson(content, LwM2mNode.class);
-	        WriteRequest request = new WriteRequest(Mode.REPLACE, ContentFormat.fromName("JSON"), "/10250/0/12", node);
+	        WriteRequest request = new WriteRequest(Mode.REPLACE, ContentFormat.JSON, "/10250/0/12", node);
 			WriteResponse cResponse = server.send(server.getRegistrationService().getByEndpoint(endpoint), request, TIMEOUT);
 			String response = null;
 	        if (cResponse == null) {
@@ -287,14 +291,15 @@ public class BrokerServlet extends HttpServlet {
         	String pathJSON = "/home/pi/lightdevices/"+path[1]+"OwnershipPriority.json";
         	try {
 
-        		FileWriter file = new FileWriter(pathJSON);
-        		file.write(dataUpdate);
-        		file.close();
+//        		FileWriter file = new FileWriter(pathJSON);
+//        		file.write(dataUpdate);
+//        		file.close();
 
 
             	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
             	newPathInfo = StringUtils.substringBefore(newPathInfo, "update")+"10250/0/12";
-            	updatePriorityOwnership(resp,newPathInfo,pathJSON);
+            	updatePriorityOwnership(resp,path[1],pathJSON);
+            	return;
         	} catch (IOException e) {
         	   // do something
         	}
