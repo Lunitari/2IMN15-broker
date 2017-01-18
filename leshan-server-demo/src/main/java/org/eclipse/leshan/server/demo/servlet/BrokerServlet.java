@@ -20,6 +20,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
@@ -69,8 +70,8 @@ public class BrokerServlet extends HttpServlet {
     private final ClientServlet clients;
     private final Gson gson;
 
-    //private static User[] users;
-    private static ArrayList<User> usersList;
+//    private static ArrayList<User> usersList;
+    private static HashMap<String, User> usersMap;
 
     public BrokerServlet(ClientServlet clients, LwM2mServer server, int securePort) {
         this.server = server;
@@ -83,13 +84,13 @@ public class BrokerServlet extends HttpServlet {
         gsonBuilder.setDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
         this.gson = gsonBuilder.create();
 
-        usersList=new ArrayList<>();
+        usersMap=new HashMap<>();
         User admin=new User("Office-Admin-0", 0, "Room-21","admin","admin@tue.nl","pswd");
 
 //        execute the code below when receiving the OWNERSHIPPRIORITY.JSON
 //        admin.setLocation(2, 2);
 //        double dist = admin.getDistanceFromLocation(1, 5);
-        usersList.add(admin);
+        usersMap.put(admin.UserID,admin);
     }
 
     public JSONArray findClientType(String type) {
@@ -111,17 +112,34 @@ public class BrokerServlet extends HttpServlet {
         return response;
     }
 
-    public void setUsers(String type) {
-        JSONArray j = new JSONArray(type);
+    public void setUsers(String users) {
+        JSONArray j = new JSONArray(users);
 
         for(int i = 0; i < j.length(); i++) {
             JSONObject c = j.getJSONObject(i);
-                usersList.add(new User(c.getString("UserID"),c.getInt("GroupNo"),c.getString("RoomID"),
+                usersMap.put(c.getString("UserID"),new User(c.getString("UserID"),c.getInt("GroupNo"),c.getString("RoomID"),
                                   c.getString("Name"),c.getString("Email"),c.getString("Password")));
                 //test
-                usersList.get(i).setSensor("Sensor-Device-19-1");
+//                usersList.get(i).setSensor("Sensor-Device-19-1");
         }
         return;
+    }
+
+    public void setUserOwnership(String lightID,String usersOwnership) {
+    	JSONArray j = new JSONArray(usersOwnership);
+    	for(int i = 0; i < j.length(); i++) {
+            JSONObject c = j.getJSONObject(i);
+            if (c.get("user_id").equals("USER1")) {
+            	usersMap.get("user_id").setLightUSER1(lightID);
+            	usersMap.get("user_id").setLocation(c.getDouble("user_location_x"), c.getDouble("user_location_y"));
+            	usersMap.get("user_id").setSensor(c.getString("sensor_id"));
+            }
+            else if (c.get("user_id").equals("USER2")) {
+            	usersMap.get("user_id").setLightUSER2(lightID);
+            }
+    	}
+
+    	return;
     }
 
 
@@ -210,7 +228,7 @@ public class BrokerServlet extends HttpServlet {
 
     /**
      * TODO: BEFORE PUSHING REVERT COMMENT updatePresence
-     * 
+     *
      * remove the changing of the presence of the user -> acquire from the sensor/broker storage.
      * Used for logging into the client side and changing the presence of the user.
      */
@@ -229,50 +247,34 @@ public class BrokerServlet extends HttpServlet {
                 resp.setStatus(HttpServletResponse.SC_OK);
                 return;
         	}
-        	// Specific Users (Login/update sensor status)
+        	// Specific Users
         	if (path.length > 1) {
             	String userID = path[1];
-                String data = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-                String[] input = StringUtils.split(data, ':');
-                if (input.length >= 2){
-        	        if (input[0].equals("login")){
-        		        for(int i = 0; i < usersList.size(); i++){
-        		        	if(usersList.get(i).UserID.toLowerCase().equals(userID.toLowerCase())){
-        		        		Boolean atDesk = AvailableLightDiscovery.userAtDesk(userID);
-        		        		Boolean correctLogin = usersList.get(i).checkPassword(input[1]);
-        		        		if (correctLogin && atDesk){
-        		                    resp.setContentType("text/plain");
-        		                    String response = "correctLogin";
-        		                    resp.getOutputStream().write(response.getBytes("UTF-8"));
-        		                    resp.setStatus(HttpServletResponse.SC_OK);
-        		                    return;
-        		        		}
-        		        		else if (correctLogin && !atDesk){
-        		        			resp.setContentType("text/plain");
-        		                    String response = "notAtDesk";
-        		                    resp.getOutputStream().write(response.getBytes("UTF-8"));
-        		                    resp.setStatus(HttpServletResponse.SC_OK);
-        		                    return;
-        		        		}
-        		        		else {
-        		        			resp.setStatus(HttpServletResponse.SC_ACCEPTED);
-        		        	        resp.getWriter().format("Invalid username or password").flush();
-        		        	        return;
-        		        		}
-        		        	}
-        		        }
-        	        }
-        	        else if (input[0].equals("status")){
-        	        	for (int i = 0; i < usersList.size(); i++) {
-        	        		if (usersList.get(i).UserID.equals(userID)){
-//        	        			usersList.get(i).updatePresenceUser(Boolean.parseBoolean(input[1]));
-        	        			resp.setStatus(HttpServletResponse.SC_ACCEPTED);
-        	        	        resp.getWriter().format("Status changed").flush();
-        	        	        return;
-        	        		}
-        	        	}
-        	        }
-                }
+                String input = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+	        	if(usersMap.containsKey(userID)) {
+                    Boolean atDesk = AvailableLightDiscovery.userAtDesk(userID);
+	        		Boolean correctLogin = usersMap.get(userID).checkPassword(input);
+	        		if (correctLogin && atDesk){
+	                    resp.setContentType("text/plain");
+	                    String response = "correctLogin";
+	                    resp.getOutputStream().write(response.getBytes("UTF-8"));
+	                    resp.setStatus(HttpServletResponse.SC_OK);
+	                    return;
+	        		}
+	        		else if (correctLogin && !atDesk) {
+	        			resp.setContentType("text/plain");
+	                    String response = "notAtDesk";
+	                    resp.getOutputStream().write(response.getBytes("UTF-8"));
+	                    resp.setStatus(HttpServletResponse.SC_OK);
+	                    return;
+	        		}
+	        		else {
+	        			resp.setStatus(HttpServletResponse.SC_ACCEPTED);
+	        	        resp.getWriter().format("Invalid username or password").flush();
+	        	        return;
+	        		}
+	        	}
+
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 resp.getWriter().format("No registered user with id '%s'", userID).flush();
 
@@ -281,17 +283,17 @@ public class BrokerServlet extends HttpServlet {
         if (typeRequest.equals("lights") && path.length > 2 && path[2].equals("update") ) {
 
         	String dataUpdate = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+        	setUserOwnership(path[1], dataUpdate);
         	String pathJSON = "/home/pi/lightdevices/"+path[1]+"OwnershipPriority.json";
         	try {
 
         		FileWriter file = new FileWriter(pathJSON);
         		file.write(dataUpdate);
         		file.close();
-        		
+
 
             	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
             	newPathInfo = StringUtils.substringBefore(newPathInfo, "update")+"10250/0/12";
-            	//((Request) req).setPathInfo(newPathInfo);
             	updatePriorityOwnership(resp,newPathInfo,pathJSON);
         	} catch (IOException e) {
         	   // do something
@@ -299,7 +301,6 @@ public class BrokerServlet extends HttpServlet {
         	resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
     	    resp.getWriter().append("JSON not valid").flush();
         	return;
-
         }
 
 		// forward request to the device
