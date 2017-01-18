@@ -16,8 +16,8 @@ public class User {
 	public String Email;
 	private String Password;
 	private boolean AtDesk;
-	private int locationX;
-	private int locationY;
+	private double locationX;
+	private double locationY;
 
 	private String LightUSER1;
 	private String LightUSER2;
@@ -33,7 +33,7 @@ public class User {
 //      AtDesk = atDesk;      
     }
 	
-	public void setLocation(int X, int Y) {
+	public void setLocation(double X, double Y) {
 		locationX = X;
 		locationY = Y;
 	}

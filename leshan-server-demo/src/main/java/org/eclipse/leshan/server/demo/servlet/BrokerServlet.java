@@ -86,8 +86,8 @@ public class BrokerServlet extends HttpServlet {
     private final ClientServlet clients;
     private final Gson gson;
 
-    //private static User[] users;
-    private static ArrayList<User> usersList;
+//    private static ArrayList<User> usersList;
+    private static HashMap<String, User> usersMap;
 
     public BrokerServlet(ClientServlet clients, LwM2mServer server, int securePort) {
         this.server = server;
@@ -101,13 +101,13 @@ public class BrokerServlet extends HttpServlet {
         this.gson = gsonBuilder.create();
         devices= new HashMap<>();
 
-        usersList=new ArrayList<>();
+        usersMap=new HashMap<>();
         User admin=new User("Office-Admin-0", 0, "Room-21","admin","admin@tue.nl","pswd");
         admin.updatePresenceUser(true);
 //        execute the code below when receiving the OWNERSHIPPRIORITY.JSON
 //        admin.setLocation(2, 2);
 //        double dist = admin.getDistanceFromLocation(1, 5);
-        usersList.add(admin);
+        usersMap.put(admin.UserID,admin);
     }
 
     public JSONArray findClientType(String type) {
@@ -129,15 +129,32 @@ public class BrokerServlet extends HttpServlet {
         return response;
     }
 
-    public void setUsers(String type) {
-        JSONArray j = new JSONArray(type);
+    public void setUsers(String users) {
+        JSONArray j = new JSONArray(users);
 
         for(int i = 0; i < j.length(); i++) {
             JSONObject c = j.getJSONObject(i);
-                usersList.add(new User(c.getString("UserID"),c.getInt("GroupNo"),c.getString("RoomID"),
+                usersMap.put(c.getString("UserID"),new User(c.getString("UserID"),c.getInt("GroupNo"),c.getString("RoomID"),
                                   c.getString("Name"),c.getString("Email"),c.getString("Password")));
         }
         return;
+    }
+    
+    public void setUserOwnership(String lightID,String usersOwnership) {
+    	JSONArray j = new JSONArray(usersOwnership);
+    	for(int i = 0; i < j.length(); i++) {
+            JSONObject c = j.getJSONObject(i);
+            if (c.get("user_id").equals("USER1")) {
+            	usersMap.get("user_id").setLightUSER1(lightID);
+            	usersMap.get("user_id").setLocation(c.getDouble("user_location_x"), c.getDouble("user_location_y"));
+            	usersMap.get("user_id").setSensor(c.getString("sensor_id"));
+            }
+            else if (c.get("user_id").equals("USER2")) {
+            	usersMap.get("user_id").setLightUSER2(lightID);
+            }            
+    	}
+    	
+    	return;
     }
 
 
@@ -256,9 +273,9 @@ public class BrokerServlet extends HttpServlet {
                 String[] input = StringUtils.split(data, ':');
                 if (input.length >= 2){
         	        if (input[0].equals("login")){
-        		        for(int i = 0; i < usersList.size(); i++){
-        		        	if(usersList.get(i).UserID.toLowerCase().equals(userID.toLowerCase())){
-        		        		int correctLogin = usersList.get(i).checkLogin(input[1]);
+        		        for(int i = 0; i < usersMap.size(); i++){
+        		        	if(usersMap.containsKey(userID)) {
+        		        		int correctLogin = usersMap.get(userID).checkLogin(input[1]);
         		        		if (correctLogin == 1){
         		                    resp.setContentType("text/plain");
         		                    String response = "correctLogin";
@@ -282,9 +299,9 @@ public class BrokerServlet extends HttpServlet {
         		        }
         	        }
         	        else if (input[0].equals("status")){
-        	        	for (int i = 0; i < usersList.size(); i++) {
-        	        		if (usersList.get(i).UserID.equals(userID)){
-        	        			usersList.get(i).updatePresenceUser(Boolean.parseBoolean(input[1]));
+        	        	for (int i = 0; i < usersMap.size(); i++) {
+        	        		if (usersMap.containsKey(userID)) {
+        	        			usersMap.get(userID).updatePresenceUser(Boolean.parseBoolean(input[1]));
         	        			resp.setStatus(HttpServletResponse.SC_ACCEPTED);
         	        	        resp.getWriter().format("Status changed").flush();
         	        	        return;
@@ -300,7 +317,8 @@ public class BrokerServlet extends HttpServlet {
 
         if (typeRequest.equals("ligths") && path.length > 2 && path[2].equals("update") ) {
 
-        	String dataUpdate = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+        	String dataUpdate = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));       
+        	setUserOwnership(path[1], dataUpdate);       	
         	String pathJSON = "/home/pi/lightdevices/"+path[1]+"OwnershipPriority.json";
         	try {
 
@@ -313,8 +331,7 @@ public class BrokerServlet extends HttpServlet {
 
         	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
         	newPathInfo = StringUtils.substringBefore(newPathInfo, "update")+"10250/0/12";
-        	//((Request) req).setPathInfo(newPathInfo);
-        	updatePriorityOwnership(resp,newPathInfo,pathJSON);
+        	updatePriorityOwnership(resp,path[1],pathJSON);
 
         }
 

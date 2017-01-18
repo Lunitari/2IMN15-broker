@@ -48,9 +48,43 @@ lwClientControllers.controller('ClientListCtrl', [
         });
 
         // add function to show client
-        $scope.showClient = function(client) {
-            $location.path('/clients/' + client.endpoint);
-        };
+        $scope.showClient = function(client) { 	           
+           
+        	$location.path('/clients/' + client.endpoint);
+            
+//            
+//            $http.put('api/clients/' + $routeParams.clientId+ '10250/0/2',"USED").error(function(data, status, headers, config) {
+//                $scope.error = "Unable put client " + $routeParams.clientId+" : "+ status + " " + data;  
+//                console.error($scope.error);
+//            }).success(function(data, status, headers, config) {
+//            	
+//            	$scope.error = "Success";
+//            	console.error($scope.error);
+//            });  
+            
+//            
+//            $http.put('api/clients/' + $routeParams.clientId+ '10250/0/3',"USER1");
+//            .error(function(data, status, headers, config) {
+//                $scope.error = "Unable put client " + $routeParams.clientId+" : "+ status + " " + data;  
+//                console.error($scope.error);
+//            });
+//            .success(function(data, status, headers, config) {
+//            	$scope.error = "Success";
+//            	
+//            }); 
+//            
+//            $http.put('api/clients/' + $routeParams.clientId+ '10250/0/4',$rootScope.user);
+//            .error(function(data, status, headers, config) {
+//                $scope.error = "Unable put client " + $routeParams.clientId+" : "+ status + " " + data;  
+//                console.error($scope.error);
+//            });
+//            .success(function(data, status, headers, config) {
+//            	$scope.error = "Success";
+//            	
+//            });  
+//            
+//            
+        };  
 
         // the tooltip message to display for a client (all standard attributes, plus additional ones)
         $scope.clientTooltip = function(client) {
