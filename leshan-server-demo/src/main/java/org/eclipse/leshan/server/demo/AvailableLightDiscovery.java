@@ -199,9 +199,9 @@ public class AvailableLightDiscovery {
 		
 		
 		// User is USER2 && USER1 is not at his desk
-		if (user.getLightUSER2().equals(endpoint) && (devices.get(endpoint).get(LIGHT_STATE).equals("FREE") || 
-				   (devices.get(endpoint).get(LIGHT_STATE).equals("USED") && devices.get(endpoint).get(LIGHT_USER_TYPE).equals("USER3"))))
-					return true;
+		if (user.getLightUSER2().equals(endpoint) && (devices.get(endpoint).get(LIGHT_STATE).equals("FREE") ||  
+			(devices.get(endpoint).get(LIGHT_STATE).equals("USED") && !devices.get(endpoint).get(LIGHT_USER_TYPE).equals("USER1"))))
+			return true;
 		
 		//check if required resources are known
 		if(!devices.get(endpoint).containsKey(LIGHT_USER_ID)) return false;
