@@ -1,0 +1,59 @@
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+target/
+leshan-all/target/classes/META-INF/MANIFEST.MF
+leshan-all/target/classes/META-INF/maven/org.eclipse.leshan/leshan-all/pom.properties
+leshan-bsserver-demo/target/classes/META-INF/MANIFEST.MF
+leshan-bsserver-demo/target/classes/META-INF/maven/org.eclipse.leshan/leshan-bsserver-demo/pom.properties
+leshan-client-demo/target/classes/META-INF/MANIFEST.MF
+leshan-client-demo/target/classes/META-INF/maven/org.eclipse.leshan/leshan-client-demo/pom.properties
+leshan-integration-tests/target/classes/META-INF/MANIFEST.MF
+leshan-integration-tests/target/classes/META-INF/maven/org.eclipse.leshan/leshan-integration-tests/pom.properties
+leshan-server-demo/target/classes/META-INF/MANIFEST.MF
+leshan-server-demo/target/classes/META-INF/maven/org.eclipse.leshan/leshan-server-demo/pom.properties
+
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+# =========================
+# Operating System Files
+# =========================
+
+# OSX
+# =========================
+
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk

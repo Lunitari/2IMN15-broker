@@ -69,7 +69,7 @@ public class BrokerServlet extends HttpServlet {
     private static final long TIMEOUT = 5000; // ms
 
     private static final long serialVersionUID = 1L;
-    private final String FILEPATH = "/home/lorin-andrei/pi/lightdevices/";
+    private final String FILEPATH = "/home/pi/lightdevices/";
 
 
     private final LwM2mServer server;
