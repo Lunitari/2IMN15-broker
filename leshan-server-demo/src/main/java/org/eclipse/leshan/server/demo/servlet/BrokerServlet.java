@@ -21,6 +21,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -323,7 +324,7 @@ public class BrokerServlet extends HttpServlet {
         		FileWriter fileWr = new FileWriter(file);
         		fileWr.write(dataUpdate);
         		fileWr.close();
-        		updatePriorityOwnership(resp,path[1],Inet4Address.getLocalHost().toString()+":8080/api/broker/lights/"+path[1]+"/updateOwnershipPriority");
+        		updatePriorityOwnership(resp,path[1],"http://" + InetAddress.getLocalHost().getHostAddress()+":8080/api/broker/lights/"+path[1]+"/updateOwnershipPriority");
             	return;
         		
         	} catch (IOException e) {
