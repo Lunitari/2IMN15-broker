@@ -1,0 +1,35 @@
+[
+  {
+    "user_type": "USER2",
+    "user_id": "Office-Worker-21",
+    "sensor_id": "Sensor-Device-21-1",
+    "light_color": "(255, 255, 255)",
+    "low_light": false,
+    "user_location_x": 4.0,
+    "user_location_y": 8.0},
+  {
+    "user_type": "USER1",
+    "user_id": "Office-Worker-19",
+    "sensor_id": "Sensor-Device-19-1",
+    "light_color": "(255, 0, 0)",
+    "low_light": false,
+    "user_location_x": 6.0,
+    "user_location_y": 5.0},
+  {
+    "user_type": "USER3",
+    "user_id": "Office-Worker-18",
+    "sensor_id": "Sensor-Device-18-1",
+    "light_color": "(0, 255, 0)",
+    "low_light": false,
+    "user_location_x": 4.0,
+    "user_location_y": 2.0},
+  {
+    "user_type": "USER3",
+    "user_id": "Office-Worker-17",
+    "sensor_id": "Sensor-Device-17-1",
+    "light_color": "(0, 0, 255)",
+    "low_light": true,
+    "user_location_x": 2.0,
+    "user_location_y": 5.0
+  }
+]

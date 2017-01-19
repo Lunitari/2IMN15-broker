@@ -13,7 +13,7 @@
         "RoomID":"Room-21",
         "Name":"Mark",
         "Email":"m@tue.nl",
-        "Password":"54321"
+        "Password":"12345"
     },
     {
         "UserID": "Office-Worker-18",
@@ -21,6 +21,14 @@
         "RoomID":"Room-21",
         "Name":"Lin",
         "Email":"l@tue.nl",
-        "Password":"54321"
+        "Password":"12345"
+    },
+    {
+        "UserID": "Office-Worker-17",
+        "GroupNo":17,
+        "RoomID":"Room-21",
+        "Name":"Lin2",
+        "Email":"l2@tue.nl",
+        "Password":"12345"
     }
 ]
