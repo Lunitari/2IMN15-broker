@@ -51,13 +51,13 @@ lwClientControllers.controller('ClientListCtrl', [
         // add function to show client
         $scope.showClient = function(client) { 	      
        
-            $http.put('api/clients/' + client.endpoint + '/10250/0/2',"{\"id\":2,\"value\":\"USED\"}").error(function(data, status, headers, config) {
-                $scope.error = "Unable put client " + client.endpoint +" : "+ status + " " + data;  
-                console.error($scope.error);
-            }).success(function(data, status, headers, config) {
-            	
-            	$scope.error = "Success";            	
-            	console.error($scope.error);
+//            $http.put('api/clients/' + client.endpoint + '/10250/0/2',"{\"id\":2,\"value\":\"USED\"}").error(function(data, status, headers, config) {
+//                $scope.error = "Unable put client " + client.endpoint +" : "+ status + " " + data;  
+//                console.error($scope.error);
+//            }).success(function(data, status, headers, config) {
+//            	
+//            	$scope.error = "Success";            	
+//            	console.error($scope.error);
             	
             	$http.get('/api/broker/lights/' + client.endpoint +'/user_type/' + $rootScope.user).error(function(data, status, headers, config) {
                     $scope.error = "Unable put client " + client.endpoint +" : "+ status + " " + data;  
@@ -68,16 +68,18 @@ lwClientControllers.controller('ClientListCtrl', [
                 	$scope.error = "Success";            	
                 	console.error($scope.error);
             	
-	            	$http.put('api/clients/' + client.endpoint + '/10250/0/3',"{\"id\":3,\"value\":\""+data+"\"}").error(function(data, status, headers, config) {
-	                    $scope.error = "Unable put client " + client.endpoint +" : "+ status + " " + data;  
-	                    console.error($scope.error);
-	                }).success(function(data, status, headers, config) {
-	                	
-	                	$scope.error = "Success";            	
-	                	console.error($scope.error);
+//	            	$http.put('api/clients/' + client.endpoint + '/10250/0/3',"{\"id\":3,\"value\":\""+data+"\"}").error(function(data, status, headers, config) {
+//	                    $scope.error = "Unable put client " + client.endpoint +" : "+ status + " " + data;  
+//	                    console.error($scope.error);
+//	                }).success(function(data, status, headers, config) {
+//	                	
+//	                	$scope.error = "Success";            	
+//	                	console.error($scope.error);
 	                	
 	                	
 	                	// if success
+                	if (data == "USER3") {
+                	
 	                	$http.put('api/clients/' + client.endpoint + '/10250/0/4',"{\"id\":4,\"value\":\""+$rootScope.user+"\"}").error(function(data, status, headers, config) {
                         	$scope.error = "Unable put client " + client.endpoint +" : "+ status + " " + data;  
                         	console.error($scope.error);
@@ -86,13 +88,14 @@ lwClientControllers.controller('ClientListCtrl', [
                     		$scope.error = "Success";            	
                     		console.error($scope.error);
                     		$location.path('/clients/' + client.endpoint);
-                    	});                 
-                	}); 
+                    	});
+                	}
+//                	}); 
             	
                 });
             	
             	
-            });             
+//            });             
         };  
 
         // the tooltip message to display for a client (all standard attributes, plus additional ones)
