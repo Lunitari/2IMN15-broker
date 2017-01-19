@@ -331,8 +331,7 @@ public class BrokerServlet extends HttpServlet {
         	   // do something
         	}
         	
-        	resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-    	    resp.getWriter().append("JSON not valid").flush();
+        	resp.setStatus(HttpServletResponse.SC_OK);
         	return;
         }
 
