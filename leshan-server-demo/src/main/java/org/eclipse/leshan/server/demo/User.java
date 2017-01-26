@@ -53,7 +53,7 @@ public class User {
 	}
 
 
-	public double getDistanceFromLocation(int X, int Y) {
+	public double getDistanceFromLocation(double X, double Y) {
 		//sqrt((x2-x1)^2 + (y2-y1)^2)
 		double distance = Math.sqrt(Math.pow(X - locationX, 2) + Math.pow(Y - locationY, 2));
 		return distance;
@@ -62,14 +62,14 @@ public class User {
 	public Boolean checkPassword(String password){
 		return password.equals(Password);
 	}
-	
+
 	public String checkUserType(String lightID) {
 		if (lightID.equals(getLightUSER1())) {
-			
+
 			return "USER1";
-		} 
+		}
 		else if (lightID.equals(getLightUSER2())) {
-		
+
 			return "USER2";
 		}
 		return "USER3";

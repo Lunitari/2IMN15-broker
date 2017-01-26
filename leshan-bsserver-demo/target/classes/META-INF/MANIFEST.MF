@@ -1,6 +1,0 @@
-Manifest-Version: 1.0
-Implementation-Version: 0.1.11-M15-SNAPSHOT
-Built-By: Chrothalis
-Build-Jdk: 1.8.0_111
-Created-By: Maven Integration for Eclipse
-

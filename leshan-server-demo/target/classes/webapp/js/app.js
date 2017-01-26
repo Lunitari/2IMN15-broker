@@ -21,7 +21,6 @@
 var leshanApp = angular.module('leshanApp',[ 
         'ngRoute',
         'clientControllers',
-        'lightControllers',
         'objectDirectives',
         'instanceDirectives',
         'resourceDirectives',

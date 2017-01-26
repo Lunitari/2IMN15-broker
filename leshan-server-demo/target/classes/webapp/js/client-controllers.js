@@ -49,42 +49,36 @@ lwClientControllers.controller('ClientListCtrl', [
         });
 
         // add function to show client
-        $scope.showClient = function(client) { 	           
-           
-        	$location.path('/clients/' + client.endpoint);
-            
-//            
-//            $http.put('api/clients/' + $routeParams.clientId+ '10250/0/2',"USED").error(function(data, status, headers, config) {
-//                $scope.error = "Unable put client " + $routeParams.clientId+" : "+ status + " " + data;  
-//                console.error($scope.error);
-//            }).success(function(data, status, headers, config) {
-//            	
-//            	$scope.error = "Success";
-//            	console.error($scope.error);
-//            });  
-            
-//            
-//            $http.put('api/clients/' + $routeParams.clientId+ '10250/0/3',"USER1");
-//            .error(function(data, status, headers, config) {
-//                $scope.error = "Unable put client " + $routeParams.clientId+" : "+ status + " " + data;  
-//                console.error($scope.error);
-//            });
-//            .success(function(data, status, headers, config) {
-//            	$scope.error = "Success";
-//            	
-//            }); 
-//            
-//            $http.put('api/clients/' + $routeParams.clientId+ '10250/0/4',$rootScope.user);
-//            .error(function(data, status, headers, config) {
-//                $scope.error = "Unable put client " + $routeParams.clientId+" : "+ status + " " + data;  
-//                console.error($scope.error);
-//            });
-//            .success(function(data, status, headers, config) {
-//            	$scope.error = "Success";
-//            	
-//            });  
-//            
-//            
+        $scope.showClient = function(client) { 	      
+  
+            	$http.get('/api/broker/lights/' + client.endpoint +'/user_type/' + $rootScope.user).error(function(data, status, headers, config) {
+                    $scope.error = "Unable put client " + client.endpoint +" : "+ status + " " + data;  
+                    console.error($scope.error);
+                }).success(function(data, status, headers, config) {
+                	
+                	
+                	$scope.error = "Success";            	
+                	console.error($scope.error);
+	                	
+	                	// if success
+                	if (data == "USER3") {
+                	
+	                	$http.put('api/clients/' + client.endpoint + '/10250/0/4',"{\"id\":4,\"value\":\""+$rootScope.user+"\"}").error(function(data, status, headers, config) {
+                        	$scope.error = "Unable put client " + client.endpoint +" : "+ status + " " + data;  
+                        	console.error($scope.error);
+                		}).success(function(data, status, headers, config) {
+                    	
+                    		$scope.error = "Success";            	
+                    		console.error($scope.error);
+                    		});
+                	}
+			$location.path('/clients/' + client.endpoint);
+//                	}); 
+            	
+                });
+            	
+            	
+//            });             
         };  
 
         // the tooltip message to display for a client (all standard attributes, plus additional ones)

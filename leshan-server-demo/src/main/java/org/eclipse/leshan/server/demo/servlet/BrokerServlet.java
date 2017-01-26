@@ -200,18 +200,18 @@ public class BrokerServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_OK);
             return;
         }
-         
+
         if (typeRequest.equals("lights") && path[2].equals("user_type")){
-        	 
+
              resp.setContentType("text/plain");
              String response = usersMap.get(path[3]).checkUserType(path[1]);
              resp.getOutputStream().write(response.getBytes("UTF-8"));
              resp.setStatus(HttpServletResponse.SC_OK);
         	return;
         }
-        
+
         if (typeRequest.equals("lights") && path[2].equals("updateOwnershipPriority")) {
-        	
+
         	try {
         		String content = FileUtils.readFileToString(new File(FILEPATH+path[1]+"/OwnershipPriority.json"));
         		resp.setContentType("application/json");
@@ -219,19 +219,19 @@ public class BrokerServlet extends HttpServlet {
                 resp.setStatus(HttpServletResponse.SC_OK);
         	} catch (IOException e) {
          	   // do something
-         	}     	
+         	}
             return;
         }
-        
+
         // forward request to the device
         if ((typeRequest.equals("lights") || typeRequest.equals("sensors")) && path.length > 2) {
-        	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
+        	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), typeRequest);
         	((Request) req).setPathInfo(newPathInfo);
         	clients.doGet(req, resp);
         	return;
         }
-        
-        
+
+
 
 	    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 	    resp.getWriter().append("Operation not allowed").flush();
@@ -248,7 +248,7 @@ public class BrokerServlet extends HttpServlet {
 
     	// forward request to the device
     	if ((typeRequest.equals("lights") || typeRequest.equals("sensors")) && path.length > 2) {
-        	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
+        	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), typeRequest);
         	((Request) req).setPathInfo(newPathInfo);
         	clients.doPut(req, resp);
         	return;
@@ -258,12 +258,7 @@ public class BrokerServlet extends HttpServlet {
 	    resp.getWriter().append("Operation not allowed").flush();
     }
 
-    /**
-     * TODO: BEFORE PUSHING REVERT COMMENT updatePresence
-     *
-     * remove the changing of the presence of the user -> acquire from the sensor/broker storage.
-     * Used for logging into the client side and changing the presence of the user.
-     */
+    
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String[] path = StringUtils.split(req.getPathInfo(), '/');
@@ -284,7 +279,7 @@ public class BrokerServlet extends HttpServlet {
             	String userID = path[1];
                 String input = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
 	        	if(usersMap.containsKey(userID)) {
-	        		Boolean atDesk = AvailableLightDiscovery.userAtDesk(userID);  
+	        		Boolean atDesk = AvailableLightDiscovery.userAtDesk(userID);
 	        		Boolean correctLogin = usersMap.get(userID).checkPassword(input);
 	        		if (correctLogin && atDesk){
 	                    resp.setContentType("text/plain");
@@ -318,26 +313,26 @@ public class BrokerServlet extends HttpServlet {
         	setUserOwnership(path[1], dataUpdate);
         	String pathJSON = FILEPATH+path[1]+"/OwnershipPriority.json";
         	try {
-        		
-        		File file = new File(pathJSON); 
+
+        		File file = new File(pathJSON);
         		file.getParentFile().mkdirs();
         		FileWriter fileWr = new FileWriter(file);
         		fileWr.write(dataUpdate);
         		fileWr.close();
         		updatePriorityOwnership(resp,path[1],"http://" + InetAddress.getLocalHost().getHostAddress()+":8080/api/broker/lights/"+path[1]+"/updateOwnershipPriority");
             	return;
-        		
+
         	} catch (IOException e) {
         	   // do something
         	}
-        	
+
         	resp.setStatus(HttpServletResponse.SC_OK);
         	return;
         }
 
 		// forward request to the device
 		if ((typeRequest.equals("lights") || typeRequest.equals("sensors")) && path.length > 2) {
-			String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
+			String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), typeRequest);
 			((Request) req).setPathInfo(newPathInfo);
 			clients.doPost(req, resp);
 			return;
@@ -354,7 +349,7 @@ public class BrokerServlet extends HttpServlet {
 
         // forward request to the device
     	if ((typeRequest.equals("lights") || typeRequest.equals("sensors")) && path.length > 2) {
-        	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), "lights");
+        	String newPathInfo = StringUtils.substringAfter(req.getPathInfo(), typeRequest);
         	((Request) req).setPathInfo(newPathInfo);
         	clients.doDelete(req, resp);
         	return;
